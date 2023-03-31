@@ -10,7 +10,7 @@
 }
 
 :root {
-  --rem: calc(100vw / 1440);
+  --rem: clamp(0.2px, calc(100vw / 1440), 1px);
 
   --white: #ffffff;
   --black: #000000;
@@ -27,4 +27,5 @@ html {
 
 body {
   font-family: "Inter", sans-serif;
+  // font-size: 16rem;
 }
