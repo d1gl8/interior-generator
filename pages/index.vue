@@ -22,8 +22,6 @@ const fileInput = async (e: Event) => {
   loading.value = true;
 
   console.clear();
-  const version = await fetch("http://91.220.69.217:6010/api/version");
-
   const file = e.target?.files[0];
 
   const sendFile = async (data: FormData) => {
@@ -100,7 +98,7 @@ const showHideCrop = (idx: Number) => {
                 <inline-svg src="/img/icon/eye.svg" />
               </button>
               <div class="crop-img">
-                <img :src="crop.image" :alt="crop.label" />
+                <img :src="crop.rgb" :alt="crop.label" />
               </div>
               <span>
                 {{ crop.label }}
@@ -187,7 +185,7 @@ header {
       ul {
         // width: 410rem;
         max-height: 302rem;
-        overflow: scroll;
+        overflow-y: scroll;
         text-align: left;
         li {
           display: flex;

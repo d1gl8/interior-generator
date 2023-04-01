@@ -30,7 +30,7 @@ const lineSlide = (e: Event) => {
 const showHideOnCanvas = (crop: Object) => {
   const canvas = document.querySelector("canvas");
   const img = new Image(crop.box[2], crop.box[3]);
-  img.src = crop?.image;
+  img.src = crop?.rgba;
   img.onload = () => {
     let ctx = canvas?.getContext("2d");
     if (crop.visible) {
@@ -113,7 +113,6 @@ defineExpose({
     height: 100%;
     position: absolute;
     inset: 0;
-    cursor: pointer;
     opacity: 0;
   }
 

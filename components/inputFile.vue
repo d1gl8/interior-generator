@@ -42,6 +42,7 @@ label {
   background-color: var(--blue);
   border-radius: 10rem;
   padding: 20rem 50rem;
+  cursor: pointer;
   svg {
     width: 24rem;
     height: 24rem;
