@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import InlineSvg from "vue-inline-svg";
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 
 const slider = ref(null);
 
@@ -48,7 +48,7 @@ defineExpose({
 
 <template>
   <div class="before-after-slider" ref="slider" @click="cropShow">
-    <div class="images">
+    <div class="images" ref="images">
       <div class="before-wrapper">
         <img class="before" :src="before" alt="interior img before" />
       </div>
@@ -63,11 +63,20 @@ defineExpose({
       <inline-svg src="/img/icon/range-slider.svg" />
     </span>
   </div>
+  <!-- <canvas class="canvas-hide" :width="size[0]" :heigth="size[1]" /> -->
 </template>
 
 <style lang="scss" scoped>
+.canvas-hide {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
 .before-after-slider {
   --position: 50%;
+
+  max-width: 814rem;
+  max-height: 536rem;
 
   position: relative;
   display: grid;
@@ -99,7 +108,7 @@ defineExpose({
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: left;
+      object-position: left center;
     }
     canvas {
       position: absolute;
