@@ -21,7 +21,13 @@ const emits = defineEmits(["change"]);
 
 <template>
   <div class="input-file">
-    <input :id="id" type="file" @change="emits('change', $event)" />
+    <input
+      :id="id"
+      type="file"
+      accept="image/png,image/jpg,image/webp,image/bmp"
+      capture="camera"
+      @change="emits('change', $event)"
+    />
     <label :for="id">
       <inline-svg v-if="icon" :src="icon" />
       {{ text }}

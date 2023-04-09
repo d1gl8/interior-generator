@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import InlineSvg from "vue-inline-svg";
 import { ref, reactive, watch, nextTick } from "vue";
+import { useReCaptcha } from "vue-recaptcha-v3";
+
+const recaptchaInstance = useReCaptcha();
+const recaptcha = async () => {
+  await recaptchaInstance?.recaptchaLoaded();
+  const token = await recaptchaInstance?.executeRecaptcha();
+
+  return token;
+};
+
+const cloud = "http://34.77.60.205:6011";
+const dev = "http://91.220.69.217:6010";
 
 const WORK_STEPS = [
   {
@@ -20,9 +32,7 @@ const WORK_STEPS = [
     text: "Share result",
   },
 ];
-const MAIL = "photoremover@gmail.com";
-const REPORT =
-  "С учётом сложившейся международной обстановки, высокотехнологичная концепция общественного уклада прекрасно подходит для реализации системы массового участия. Банальные, но неопровержимые выводы, а также стремящиеся вытеснить традиционное производство, нанотехнологии ассоциативно распределены по отраслям. В рамках спецификации современных стандартов, сделанные на базе интернет-аналитики выводы превращены в ";
+const MAIL = "contact@artixel.io";
 
 const loading = ref(false);
 const imgBefore = ref("");
@@ -33,13 +43,7 @@ const sizes = ref([]);
 const befAftSlider = ref(null);
 const imageContainer = ref(null);
 
-const encodeImageFileAsURL = async (file: File) => {
-  let reader = new FileReader();
-  reader.onloadend = function () {
-    imgBefore.value = reader.result;
-  };
-  reader.readAsDataURL(file);
-};
+const report = ref("");
 
 const resetData = () => {
   imgBefore.value = "";
@@ -48,49 +52,130 @@ const resetData = () => {
   sizes.value = [];
 };
 
+const readFile = (file: File, as = "text") => {
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+
+    reader.onerror = reject;
+
+    if (as === "text") reader.readAsText(file);
+    if (as === "url") reader.readAsDataURL(file);
+  });
+};
+
+const sendFile = async (data: FormData) => {
+  const options = {
+    headers: {
+      // Accept: "application/json",
+      // "Content-Encoding": "gzip",
+    },
+    method: "POST",
+    body: data,
+  };
+  const request = await fetch(`${dev}/api/predict`, options);
+
+  return await request.formData();
+};
+
 const fileInput = async (e: Event) => {
   loading.value = true;
 
   console.clear();
-  const file = e.target?.files[0];
+  let file;
+  e.dataTransfer
+    ? (file = e.dataTransfer.files[0])
+    : (file = e.target?.files[0]);
   if (!file) {
     loading.value = false;
     return;
   }
   resetData();
 
-  const sendFile = async (data: FormData) => {
-    const options = {
-      headers: {
-        Accept: "application/json",
-      },
-      method: "POST",
-      body: data,
-    };
-    const request = await fetch(
-      "http://91.220.69.217:6010/api/predict",
-      options
-    );
-    const response = await request.json();
-    console.log("api response", response);
-    const { output, size, crops } = response;
-    imgAfter.value = output;
-    crops.forEach((crop: Object) => (crop.visible = false));
-    cropsData.value = crops;
-    sizes.value = size;
-  };
-
   const formData = new FormData();
   formData.append("file", file);
-  await sendFile(formData);
-  await encodeImageFileAsURL(e.target?.files[0]);
+  imgBefore.value = await readFile(file, "url");
+
+  const responseFormData = await sendFile(formData);
+  console.log("responseFormData", responseFormData);
+
+  const { crops, size } = JSON.parse(
+    await readFile(responseFormData.get("locations"))
+  );
+  cropsData.value = crops;
+  sizes.value = size;
+
+  const output = await readFile(responseFormData.get("output"), "url");
+  imgAfter.value = output;
+
+  for (const entry of responseFormData.entries()) {
+    const key = entry[0];
+    const value = entry[1];
+    if (key.includes("rgb")) {
+      const id = +key.substring(key.indexOf("_") + 1, key.length);
+      const crop = cropsData.value.find((crop) => crop.index === id);
+      if (key.includes("rgb_")) crop.rgb = await readFile(value, "url");
+      if (key.includes("rgba_")) crop.rgba = await readFile(value, "url");
+    }
+  }
 
   loading.value = false;
 };
 
+function saveImage(_, clipboard: boolean = false) {
+  console.log(clipboard);
+
+  const backgroundCvs = document.querySelector(".canvas-background");
+  const backgroundImg = new Image(sizes.value[0], sizes.value[1]);
+  backgroundImg.src = imgAfter.value;
+
+  backgroundImg.onload = () => {
+    let ctx = backgroundCvs?.getContext("2d");
+    ctx?.drawImage(backgroundImg, 0, 0);
+    console.log("back");
+  };
+
+  const cropsCvs = document.querySelector(".canvas-crops");
+  cropsData.value.forEach((crop: Object, idx: Number) => {
+    if (crop.visible) {
+      const cropImg = new Image(crop.box[2], crop.box[3]);
+      cropImg.src = crop?.rgba;
+      cropImg.onload = () => {
+        let ctx = cropsCvs?.getContext("2d");
+        ctx?.drawImage(cropImg, crop.box[0], crop.box[1]);
+        console.log("crop");
+      };
+    }
+  });
+
+  setTimeout(() => {
+    const resultCvs = document.querySelector(".canvas-result");
+    const resultCtx = resultCvs?.getContext("2d");
+    resultCtx.drawImage(backgroundCvs, 0, 0);
+    resultCtx.drawImage(cropsCvs, 0, 0);
+    const result = resultCvs.toDataURL("image/png");
+
+    if (clipboard) {
+      resultCvs?.toBlob((blob) =>
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+      );
+    } else {
+      let downloadLink = document.createElement("a");
+      document.body.appendChild(downloadLink);
+      downloadLink.href = result;
+      downloadLink.target = "_self";
+      downloadLink.download = "cropped-interior";
+      downloadLink.click();
+    }
+  }, 1000);
+}
+
 const showHideCrop = (idx: Number) => {
   cropsData.value[idx].visible = !cropsData.value[idx].visible;
-  befAftSlider.value.showHideOnCanvas(cropsData.value[idx]);
+  befAftSlider.value.showHideOnCanvas(cropsData.value[idx], cropsData.value);
 };
 
 const modalWindow = ref(null);
@@ -112,42 +197,10 @@ const closeModal = () => {
   document.removeEventListener("click", notModalClick);
 };
 
-function downloadImage() {
-  console.log("download start");
+const saveReport = async () => {
+  const token = await recaptcha();
 
-  const canvas = document.querySelector("canvas");
-  const base = new Image(sizes[0], sizes[1]);
-  base.src = imgBefore.value;
-
-  base.onload = () => {
-    let ctx = canvas?.getContext("2d");
-    ctx?.drawImage(base, sizes[0], sizes[1]);
-
-    cropsData.value.forEach((crop: Object, idx: Number) => {
-      if (crop.visible) {
-        const cropImg = new Image(crop.box[2], crop.box[3]);
-        cropImg.src = crop?.rgba;
-        cropImg.onload = () => {
-          ctx?.drawImage(cropImg, crop.box[0], crop.box[1]);
-        };
-      }
-
-      if (cropsData.value.length - 1 === idx) {
-        const downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        console.log(canvas?.toDataURL("image/png"));
-
-        downloadLink.href = canvas?.toDataURL("image/png");
-        downloadLink.target = "_self";
-        downloadLink.download = "cropped-interior";
-        downloadLink.click();
-      }
-    });
-  };
-}
-
-function saveReport() {
-  let file = new Blob([REPORT], { type: "txt" });
+  let file = new Blob([report.value], { type: "txt" });
 
   let a = document.createElement("a"),
     url = URL.createObjectURL(file);
@@ -159,7 +212,15 @@ function saveReport() {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
-}
+};
+
+const canvasEdit = () => {
+  const sliderControl = document.querySelector(".before-after-slider .control");
+  const sliderAfterImg = document.querySelector(".before-after-slider .after");
+  sliderControl.style.setProperty("display", "none");
+  sliderAfterImg.style.setProperty("display", "none");
+  befAftSlider.value.initBrushCvs();
+};
 </script>
 
 <template>
@@ -186,7 +247,13 @@ function saveReport() {
       />
       <div class="image-section">
         <div class="left" ref="imageContainer">
-          <span v-if="!imgAfter" class="no-img">
+          <span
+            v-if="!imgAfter"
+            class="no-img"
+            @dragenter.prevent.stop
+            @dragover.prevent.stop
+            @drop.prevent.stop="fileInput"
+          >
             <inline-svg v-if="!loading" src="/img/icon/upload-img.svg" />
             <loading-spinner v-else />
           </span>
@@ -219,10 +286,13 @@ function saveReport() {
               </span>
             </li>
           </ul>
-          <button class="modal-trigger" @click="openModal('share')">
-            <inline-svg src="/img/icon/share.svg" />
-            Share
-          </button>
+          <div class="buttons">
+            <button class="modal-trigger" @click="openModal('share')">
+              <inline-svg src="/img/icon/share.svg" />
+              Share
+            </button>
+            <button class="canvas-edit" @click="canvasEdit">Edit</button>
+          </div>
         </div>
       </div>
       <footer>
@@ -239,13 +309,13 @@ function saveReport() {
   </div>
   <modal :open="!!modalState">
     <div :class="modalState" ref="modalWindow">
-      <div v-if="modalState === 'report'">
-        <p class="text">{{ REPORT }}</p>
+      <form v-if="modalState === 'report'">
+        <textarea class="report-text" v-model="report" />
         <button @click="saveReport">Report</button>
-      </div>
+      </form>
 
       <ul v-if="modalState === 'share'" class="share">
-        <li>
+        <li @click="saveImage($event, true)">
           <!-- <inline-svg src="" /> -->
           <span class="text">Copy to clipboard</span>
         </li>
@@ -253,7 +323,7 @@ function saveReport() {
           <!-- <inline-svg src="" /> -->
           <span class="text">Send to messenger</span>
         </li>
-        <li @click="downloadImage">
+        <li @click="saveImage">
           <!-- <inline-svg src="" /> -->
           <span class="text">Save to disk</span>
         </li>
@@ -264,9 +334,19 @@ function saveReport() {
       </ul>
     </div>
   </modal>
+  <template v-if="sizes">
+    <canvas class="canvas-result" :width="sizes[0]" :height="sizes[1]" />
+    <canvas class="canvas-background" :width="sizes[0]" :height="sizes[1]" />
+  </template>
 </template>
 
 <style lang="scss" scoped>
+.canvas-result,
+.canvas-background {
+  position: relative;
+  display: none;
+}
+
 @mixin button {
   width: max-content;
   display: flex;
@@ -417,15 +497,23 @@ header {
           }
         }
       }
+      .buttons {
+        display: flex;
+        margin-top: 30rem;
+      }
       .modal-trigger {
         @include button;
         padding: 16rem 32rem;
-        margin-top: 30rem;
         svg {
           width: 23rem;
           height: 24rem;
           margin-right: 10rem;
         }
+      }
+      .canvas-edit {
+        @include button;
+        padding: 16rem 32rem;
+        margin-left: 20rem;
       }
     }
   }
@@ -463,11 +551,13 @@ header {
 .modal {
   .report {
     padding: 36rem 35rem 31rem;
-    .text {
+    .report-text {
+      width: 100%;
+      height: 224rem;
       font-size: 16rem;
       font-weight: 300;
       padding: 25rem 50rem 32rem 28rem;
-      border: 2rem solid var(--black);
+      border: 2rem solid var(--blue);
       border-radius: 10rem;
       margin-bottom: 30rem;
     }
