@@ -1,0 +1,38 @@
+$tablet: 768px;
+$tabletAlbum: 1024px;
+$laptop: 1280px;
+$desktop: 1920px;
+
+@mixin tablet {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tabAlb {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin laptop {
+  @media (min-width: 1280px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1920px) {
+    @content;
+  }
+}
+
+@mixin text-body {
+  font-size: 20rem;
+  line-height: 23rem;
+  color: var(--text-color);
+}
+
+@mixin shadow {
+  box-shadow: 0px 2px 0px #cacaca; // !@
+}
