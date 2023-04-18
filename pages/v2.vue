@@ -203,8 +203,8 @@ const newUpload = () => {
 
   @include desktop {
     &.image {
-      grid-template-columns: 1540rem 1fr;
-      grid-template-rows: 50rem 1027rem 24rem;
+      grid-template-columns: 1275rem 1fr;
+      grid-template-rows: 50rem 860rem 24rem;
     }
   }
 }

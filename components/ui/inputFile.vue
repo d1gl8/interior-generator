@@ -26,8 +26,7 @@ const props = defineProps({
     <input
       :id="id"
       type="file"
-      :accept="accept"
-      capture="camera"
+      accept="image/*;capture=camera"
       @change="emits('change', $event)"
     />
     <label :for="id">

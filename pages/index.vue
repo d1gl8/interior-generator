@@ -12,7 +12,7 @@ const recaptcha = async () => {
 };
 
 const cloud = "http://34.77.60.205:6011";
-const dev = "http://91.220.69.217:6010";
+const dev = "http://34.79.165.171:6011";
 
 const WORK_STEPS = [
   {

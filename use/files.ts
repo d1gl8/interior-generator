@@ -22,6 +22,7 @@ export default function useFiles() {
     };
     const request = await fetch(
       `${useRuntimeConfig().apiPath}${endpoint}`,
+      // `http://localhost:3001/post`,
       options
     );
 

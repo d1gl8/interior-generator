@@ -100,7 +100,7 @@ defineExpose({
   margin-bottom: 28rem;
   img {
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
   canvas {
     position: absolute;
@@ -108,6 +108,7 @@ defineExpose({
     left: 0;
     width: 100%;
     height: 100%;
+    object-fit: contain;
   }
 
   @include tablet {
@@ -128,8 +129,8 @@ defineExpose({
   }
 
   @include desktop {
-    width: 1540rem;
-    height: 1027rem;
+    width: 1275rem;
+    height: 860rem;
   }
 }
 </style>
