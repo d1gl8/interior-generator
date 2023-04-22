@@ -36,3 +36,8 @@ $desktop: 1920px;
 @mixin shadow {
   box-shadow: 0px 2px 0px #cacaca; // !@
 }
+
+@mixin spinner {
+  width: 200rem;
+  height: 200rem;
+}

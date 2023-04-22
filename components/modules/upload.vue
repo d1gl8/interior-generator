@@ -30,6 +30,9 @@ const uploadImg = async (e: Event) => {
   loading.value = true;
   console.clear();
 
+  // const back = await fetch(`http://localhost:3010/`);
+  // console.log(await back.json());
+
   let imageForRemover;
   e.dataTransfer
     ? (imageForRemover = e.dataTransfer.files[0])
@@ -44,7 +47,8 @@ const uploadImg = async (e: Event) => {
 
   const toSendFormData = new FormData();
   toSendFormData.append("file", imageForRemover);
-  const responseFormData = await sendFile(toSendFormData, "/api/predict");
+  const requestFormData = await sendFile(toSendFormData, "/api/predict");
+  const responseFormData = await requestFormData.formData();
 
   const image = await readFile(responseFormData.get("output"), "url");
 
@@ -87,12 +91,19 @@ const uploadImg = async (e: Event) => {
       icon="/img-v2/icon/upload.svg"
       @change="uploadImg"
     />
-    <lazy-in-svg v-if="loading" src="/img-v2/icon/spinner.svg" />
+    <lazy-in-svg
+      v-if="loading"
+      class="spinner"
+      src="/img-v2/icon/spinner.svg"
+    />
   </main>
 </template>
 
 <style lang="scss">
 .module-upload {
+  .spinner {
+    @include spinner;
+  }
   @include tablet {
     width: 100%;
     height: 400rem;

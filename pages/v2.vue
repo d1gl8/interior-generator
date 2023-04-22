@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const imageData = ref({
   isGetted: false,
@@ -13,16 +13,17 @@ const imageData = ref({
 
 const currentSection = computed(() => {
   if (!imageData.value.isGetted) return "upload";
-  if (isEdit.value) return "image edit";
+  if (editor.value.isOpen) return "image edit";
   else return "image";
 });
 
-// const upload = ref(null);
 const moduleImage = ref(null);
 const moduleControls = ref(null);
 
-const isEdit = ref(false);
-const isCopyClipSuccess = ref(false);
+const editor = ref({
+  isOpen: false,
+  mode: "crop-switcher",
+});
 
 const editorOpen = () => {
   if (document.documentElement.clientWidth < 768) {
@@ -30,16 +31,24 @@ const editorOpen = () => {
     body.style.position = "fixed";
     body.style.top = 0;
   }
-  isEdit.value = true;
+  editor.value.isOpen = true;
 };
-
 const editorClose = () => {
   if (document.documentElement.clientWidth < 768) {
     const body = document.body;
     body.style.position = "";
     body.style.top = "";
   }
-  isEdit.value = false;
+
+  editor.value = {
+    isOpen: false,
+    mode: "crop-switcher",
+  };
+};
+const eraserOpen = () => {
+  editor.value.mode = "eraser";
+  editorOpen();
+  moduleImage.value.initBrush();
 };
 
 const cropShowSwitcher = (idx: Number) => {
@@ -74,7 +83,14 @@ const hideAllCrops = () => {
     moduleImage.value.hideCrop(idx);
   });
 };
+const brushSize = ref(0);
+const brushSizeChange = (size: string) => {
+  // emits("newBrushSize", e.target.value);
+  document.body.style.setProperty("--brush-size", `${size}rem`);
+  brushSize.value = +size;
+};
 
+const isCopyClipSuccess = ref(false);
 const toClipCopy = () => {
   moduleImage.value.saveImage("clip");
   isCopyClipSuccess.value = true;
@@ -88,6 +104,14 @@ const newUpload = () => {
   const fileInput = document.querySelector(".module-upload input[type=file]");
   fileInput.click();
 };
+
+onMounted(() => {
+  brushSizeChange(
+    getComputedStyle(document.body)
+      .getPropertyValue("--brush-size")
+      .replace("rem", "")
+  );
+});
 </script>
 
 <template>
@@ -100,23 +124,34 @@ const newUpload = () => {
       @loaded="imageData = $event"
     />
     <template v-if="imageData.isGetted">
-      <LazyModuleImage ref="moduleImage" :imageData="imageData" />
+      <LazyModuleImage
+        ref="moduleImage"
+        :imageData="imageData"
+        :isEraser="editor.mode === 'eraser'"
+        :brushSize="brushSize"
+        @maskedFile="imageData.output.image = $event"
+      />
       <LazyModuleControls
         ref="moduleControls"
         :isCopyClipSuccess="isCopyClipSuccess"
         @edit="editorOpen"
+        @eraser="eraserOpen"
         @clip="toClipCopy"
         @local="moduleImage.saveImage()"
         @upload="newUpload"
       />
     </template>
     <LazyModuleEditor
-      v-if="imageData.isGetted && isEdit"
+      v-if="imageData.isGetted && editor.isOpen"
       :imageData="imageData"
+      :mode="editor.mode"
+      :brushSize="brushSize"
       @close="editorClose"
       @cropClick="cropShowSwitcher"
       @showAll="showAllCrops"
       @hideAll="hideAllCrops"
+      @brushSizeChange="brushSizeChange(+$event.target.value)"
+      @sendMask="moduleImage.sendMask"
     />
     <Footer />
   </div>
@@ -203,8 +238,8 @@ const newUpload = () => {
 
   @include desktop {
     &.image {
-      grid-template-columns: 1275rem 1fr;
-      grid-template-rows: 50rem 860rem 24rem;
+      grid-template-columns: 1540rem 1fr;
+      grid-template-rows: 50rem 1027rem 24rem;
     }
   }
 }

@@ -15,6 +15,8 @@
 :root {
   --rem: calc(100vw / 414);
 
+  --brush-size: 30rem;
+
   --color-bright: #ffffff;
   --color-text: #1f1d21;
   --color-link: #255495;
@@ -35,6 +37,7 @@
   --color-input: #ced6db;
   --color-bright-hover: #a5ee83;
   --color-toggle-on: #2a5f00;
+  --color-toggle-off: #68747c;
   --color-icon: #262626;
   --color-note: #e8ffdd;
 

@@ -33,7 +33,11 @@ defineExpose({
 <template>
   <div class="buttons">
     <ui-button text="Get some objects back" @click="$emit('edit')" />
-    <ui-button text="Erase more manually" icon="/img-v2/icon/erase.svg" />
+    <ui-button
+      text="Erase more manually"
+      icon="/img-v2/icon/erase.svg"
+      @click="$emit('eraser')"
+    />
     <div class="drop-wrapper" ref="drop">
       <ui-button
         text="Download / Share"
