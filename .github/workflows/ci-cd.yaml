@@ -18,7 +18,7 @@ jobs:
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.0
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        ssh-private-key: ${{ secrets.SSH_KEY }}
     - name: Deploy
       run: |
         ssh -o StrictHostKeyChecking=no $SSH_USER@35.187.44.146 'cd /home/deb_admin/foclean-front && git pull origin main && npm i && rm -rf .output && npm run build && systemctl restart foclean-front'
