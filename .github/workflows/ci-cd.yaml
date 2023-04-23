@@ -1,0 +1,31 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_KEY: ${{ secrets.SSH_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+    - name: Deploy
+      run: |
+        ssh -o StrictHostKeyChecking=no -p 22 $SSH_USER@your-instance-ip-address <<EOF
+        cd /home/deb_admin/foclean-front
+        git pull origin main
+        npm i
+        rm -rf .output
+        npm run build
+        systemctl restart foclean-front
+        EOF
