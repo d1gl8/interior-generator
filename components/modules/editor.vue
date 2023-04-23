@@ -86,7 +86,7 @@ const downloadCrops = () => {
     <header class="editor-header">
       <h1>
         {{ textData.headerTitle }}
-        <in-svg src="/img-v2/icon/close.svg" @click="$emit('close')" />
+        <in-svg src="/img/icon/close.svg" @click="$emit('close')" />
       </h1>
     </header>
     <div class="crops-list" v-if="mode !== 'eraser'">
@@ -119,7 +119,7 @@ const downloadCrops = () => {
         <ui-button
           v-if="mode === 'downloader'"
           :text="textData.footer.button"
-          icon="/img-v2/icon/download.svg"
+          icon="/img/icon/download.svg"
           blue
           @click="downloadCrops"
         />
@@ -144,7 +144,7 @@ const downloadCrops = () => {
       </label>
       <ui-button
         text="Erase"
-        icon="/img-v2/icon/erase.svg"
+        icon="/img/icon/erase.svg"
         @click="$emit('sendMask')"
       />
     </div>

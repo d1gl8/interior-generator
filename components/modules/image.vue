@@ -22,6 +22,7 @@ const emits = defineEmits(["newBrushSize", "maskedFile"]);
 
 const resultImage = ref(null);
 const cropsCanvas = ref(null);
+const cropsHide = ref(null);
 
 const current = ref("after");
 const currentImage = computed(() => {
@@ -30,50 +31,16 @@ const currentImage = computed(() => {
     : props.imageData.input;
 });
 
-// const getOutline = (
-//   ctx: CanvasRenderingContext2D,
-//   pointX: number,
-//   pointY: number,
-//   w: number,
-//   h: number
-// ) => {
-//   let imageData = ctx.getImageData(pointX, pointY, w, h);
-//   let data = imageData.data;
-//   let outline = [];
-//   for (let x = 0; x < w; x++) {
-//     for (let y = 0; y < h; y++) {
-//       let index = (x + y * w) * 4;
-
-//       let nextIndex, lastIndex, leftIndex, rightIndex;
-//       nextIndex = (x + (y + 1) * w) * 4;
-//       lastIndex = (x + (y - 1) * w) * 4;
-//       leftIndex = index - 4;
-//       rightIndex = index + 4;
-
-//       let cx = { X: x, Y: y };
-//       if (
-//         data[index + 3] !== 0 &&
-//         (data[nextIndex + 3] === 0 ||
-//           data[lastIndex + 3] === 0 ||
-//           data[leftIndex + 3] === 0 ||
-//           data[rightIndex + 3] === 0)
-//       ) {
-//         outline.push(cx);
-//       }
-//     }
-//   }
-//   return outline;
-// };
-
 const showCrop = (idx: Number) => {
   const crop = props.imageData.crops[idx];
-  let ctx = cropsCanvas.value.getContext("2d");
+  const ctx = cropsCanvas.value.getContext("2d");
+  const ctxHide = cropsHide.value.getContext("2d");
   const img = new Image(
     props.imageData.crops[idx].box[2],
     props.imageData.crops[idx].box[3]
   );
   img.src = props.imageData.crops[idx]?.rgba;
-  // ctx?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
+  ctxHide?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
   img.onload = () => {
     ctx?.drawImage(img, crop.box[0], crop.box[1]);
   };
@@ -82,31 +49,36 @@ const hideCrop = (idx: Number) => {
   const crop = props.imageData.crops[idx];
   let ctx = cropsCanvas.value.getContext("2d");
 
-  // let imgBox = ctx.getImageData(
-  //   crop.box[0],
-  //   crop.box[1],
-  //   crop.box[2],
-  //   crop.box[3]
-  // );
-  // let imgBoxData = imgBox.data;
+  let imgBox = ctx.getImageData(
+    crop.box[0],
+    crop.box[1],
+    crop.box[2],
+    crop.box[3]
+  );
+
+  for (let i = 0; i < imgBox.data.length; i += 4) {
+    if (imgBox.data[i + 3] !== 0) {
+      imgBox.data[i] = 0;
+      imgBox.data[i + 1] = 106;
+      imgBox.data[i + 2] = 0;
+      // imgBox.data[i + 3] = 120;
+    }
+  }
+
+  const ctxHide = cropsHide.value.getContext("2d");
+  ctxHide.globalAlpha = 0.5;
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = crop.box[2];
+  tempCanvas.height = crop.box[3];
+
+  let ctxTemp = tempCanvas.getContext("2d");
+  // ctxTemp.globalAlpha = 0.5;
+  ctxTemp.putImageData(imgBox, 0, 0);
 
   ctx?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
-  // for (let i = 0; i < imgBoxData.length; i += 4) {
-  //   if (imgBoxData[i + 3] !== 0) {
-  //     imgBoxData[i] = 0;
-  //     imgBoxData[i + 1] = 106;
-  //     imgBoxData[i + 2] = 0;
-  //     imgBoxData[i + 3] = 120;
-  //   }
-  // }
-  // const img = new Image(
-  //   props.imageData.crops[idx].box[2],
-  //   props.imageData.crops[idx].box[3]
-  // );
-  // img.src = imgBox;
-
-  // ctx.drawImage(imgBox, crop.box[0], crop.box[1]);
-  // ctx.globalAlpha = 1;
+  ctxHide.globalCompositeOperation = "destination-over";
+  ctxHide.drawImage(tempCanvas, crop.box[0], crop.box[1]);
+  tempCanvas.remove();
 };
 const saveImage = async (mode: String = "local") => {
   const tempCanvas = cropsCanvas.value.cloneNode(true);
@@ -276,12 +248,14 @@ defineExpose({
     @touchmove="setCursorPosition"
     @mouseleave="cursorLeave"
   >
-    <lazy-in-svg
-      class="spinner"
-      v-if="loading"
-      src="/img-v2/icon/spinner.svg"
-    />
+    <lazy-in-svg class="spinner" v-if="loading" src="/img/icon/spinner.svg" />
     <img :src="currentImage" alt="artixel image handler" />
+    <canvas
+      ref="cropsHide"
+      class="canvas-hide"
+      :width="props.imageData.output.size[0]"
+      :height="props.imageData.output.size[1]"
+    />
     <canvas
       ref="cropsCanvas"
       class="canvas-crops"
@@ -335,14 +309,19 @@ defineExpose({
     position: absolute;
     top: 0;
     left: 0;
-    &.canvas-crops {
+    &.canvas-crops,
+    &.canvas-hide {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
+    // .canvas-crops {
+
+    //   z-index: 2;
+    // }
     &.canvas-brush {
       cursor: none;
-      z-index: 4;
+      z-index: 3;
     }
   }
   .brush-cursor {

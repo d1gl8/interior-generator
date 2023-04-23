@@ -35,43 +35,43 @@ defineExpose({
     <ui-button text="Get some objects back" @click="$emit('edit')" />
     <ui-button
       text="Erase more manually"
-      icon="/img-v2/icon/erase.svg"
+      icon="/img/icon/erase.svg"
       @click="$emit('eraser')"
     />
     <div class="drop-wrapper" ref="drop">
       <ui-button
         text="Download / Share"
-        icon="/img-v2/icon/download.svg"
+        icon="/img/icon/download.svg"
         blue
         @click="!isDropShow ? dropShow() : dropHide()"
       />
       <ul class="drop-list" v-show="!isCopyClipSuccess && isDropShow">
         <li @click="$emit('clip')">
-          <in-svg src="/img-v2/icon/download/to-clipboard.svg" />
+          <in-svg src="/img/icon/download/to-clipboard.svg" />
           Copy to clipboard
         </li>
         <li @click="$emit('local')">
-          <in-svg src="/img-v2/icon/download/to-local.svg" />
+          <in-svg src="/img/icon/download/to-local.svg" />
           Download
         </li>
         <li @click="$emit('mail')">
-          <in-svg src="/img-v2/icon/download/to-mail.svg" />
+          <in-svg src="/img/icon/download/to-mail.svg" />
           Send by email
         </li>
         <li @click="$emit('messenger')">
-          <in-svg src="/img-v2/icon/download/to-messenger.svg" />
+          <in-svg src="/img/icon/download/to-messenger.svg" />
           Send to *messenger*
         </li>
       </ul>
       <div class="drop-success" v-if="isCopyClipSuccess">
-        <in-svg src="/img-v2/icon/download/to-clipboard.svg" />
+        <in-svg src="/img/icon/download/to-clipboard.svg" />
         Copied successfully!
       </div>
     </div>
     <ui-button text="Download specific objects" @click="$emit('downloader')" />
     <ui-button
       text="Upload new image"
-      icon="/img-v2/icon/upload.svg"
+      icon="/img/icon/upload.svg"
       @click="$emit('upload')"
     />
   </div>

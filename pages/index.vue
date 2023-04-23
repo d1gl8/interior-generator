@@ -51,6 +51,23 @@ const editorClose = () => {
   };
 };
 
+const intersectionsRender = (crop) => {
+  if (crop.intersections) {
+    crop.intersections.forEach((index) => {
+      const interIdx = imageData.value.crops.findIndex(
+        (crop) => crop.index === index
+      );
+      if (interIdx === -1) return;
+      if (imageData.value.crops[interIdx]?.visible) {
+        moduleImage.value.showCrop(interIdx);
+      } else {
+        console.log(interIdx);
+        moduleImage.value.hideCrop(interIdx);
+      }
+    });
+  }
+};
+
 const cropShowSwitcher = (idx: Number) => {
   const crop = imageData.value.crops[idx];
   crop.visible = !crop.visible;
@@ -58,18 +75,8 @@ const cropShowSwitcher = (idx: Number) => {
     moduleImage.value.showCrop(idx);
   } else {
     moduleImage.value.hideCrop(idx);
-    if (crop.intersections) {
-      crop.intersections.forEach((index) => {
-        const interIdx = imageData.value.crops.findIndex(
-          (crop) => crop.index === index
-        );
-
-        if (imageData.value.crops[interIdx].visible) {
-          moduleImage.value.showCrop(interIdx);
-        }
-      });
-    }
   }
+  intersectionsRender(crop);
 };
 const showAllCrops = () => {
   imageData.value.crops.forEach((crop: Object, idx: Number) => {

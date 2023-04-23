@@ -3,13 +3,13 @@
 <template>
   <footer class="app-footer">
     <div class="problems">
-      <in-svg src="/img-v2/icon/info.svg" />
+      <in-svg src="/img/icon/info.svg" />
       <span>
         {{ $t("cleanerPhotoPage.problems") }}
       </span>
     </div>
     <div class="mail">
-      <in-svg src="/img-v2/icon/mail.svg" />
+      <in-svg src="/img/icon/mail.svg" />
       <span>
         {{ $t("cleanerPhotoPage.mail") }}
       </span>

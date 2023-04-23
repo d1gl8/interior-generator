@@ -2,7 +2,7 @@
 
 <template>
   <header class="app-header">
-    <in-svg src="/img-v2/logo.svg" />
+    <in-svg src="/img/logo.svg" />
     <h1>Clear your interior photo of unwanted furniture</h1>
   </header>
 </template>

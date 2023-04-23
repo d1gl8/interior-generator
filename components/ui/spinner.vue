@@ -4,10 +4,10 @@
 
 <style lang="scss" scoped>
 .loading-spinner {
-  margin: auto;
-  border: 10rem solid var(--light-blue-2);
+  display: block;
+  border: 10rem solid var(--color-input);
   border-radius: 50%;
-  border-top: 10rem solid var(--blue);
+  border-top: 10rem solid var(--color-bright);
   width: 100rem;
   height: 100rem;
   animation: spinner 4s linear infinite;

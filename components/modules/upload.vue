@@ -88,14 +88,10 @@ const uploadImg = async (e: Event) => {
       ref="input"
       id="image-to-remove"
       text="Upload image"
-      icon="/img-v2/icon/upload.svg"
+      icon="/img/icon/upload.svg"
       @change="uploadImg"
     />
-    <lazy-in-svg
-      v-if="loading"
-      class="spinner"
-      src="/img-v2/icon/spinner.svg"
-    />
+    <lazy-in-svg v-if="loading" class="spinner" src="/img/icon/spinner.svg" />
   </main>
 </template>
 

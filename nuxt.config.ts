@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     },
   ],
   telemetry: false,
-  css: ["~/assets/styles/base.scss", "~/assets/styles/base-v2.scss"],
+  css: ["~/assets/styles/base.scss"],
   vite: {
     css: {
       preprocessorOptions: {

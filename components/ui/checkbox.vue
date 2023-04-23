@@ -13,8 +13,8 @@ const props = defineProps({
 
 <template>
   <div :class="['checkbox', { checked: isChecked, square }]">
-    <in-svg class="back" src="/img-v2/icon/checkbox/background.svg" />
-    <in-svg class="thumb" src="/img-v2/icon/checkbox/thumb.svg" />
+    <in-svg class="back" src="/img/icon/checkbox/background.svg" />
+    <in-svg class="thumb" src="/img/icon/checkbox/thumb.svg" />
   </div>
 </template>
 
