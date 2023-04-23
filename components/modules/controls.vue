@@ -68,7 +68,7 @@ defineExpose({
         Copied successfully!
       </div>
     </div>
-    <ui-button text="Download specific objects" />
+    <ui-button text="Download specific objects" @click="$emit('downloader')" />
     <ui-button
       text="Upload new image"
       icon="/img-v2/icon/upload.svg"

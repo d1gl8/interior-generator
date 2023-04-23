@@ -29,11 +29,20 @@ export default function useFiles() {
     });
   };
 
+  const saveFileFromURL = (fileURL: string, name: string = "file-name") => {
+    let downloadLink = document.createElement("a");
+    document.body.appendChild(downloadLink);
+    downloadLink.href = fileURL;
+    downloadLink.target = "_self";
+    downloadLink.download = name;
+    downloadLink.click();
+  };
+
   const getFileFromUrl = async (url: URL, name: string, type: string) => {
     const data = await fetch(url);
     const blob = await data.blob();
     return new File([blob], name, { type: type });
   };
 
-  return { sendFile, readFile, getFileFromUrl };
+  return { sendFile, readFile, saveFileFromURL, getFileFromUrl };
 }

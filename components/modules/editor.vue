@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import useFiles from "@/use/files";
+const { saveFileFromURL } = useFiles();
+
 const props = defineProps({
   imageData: {
     type: Object,
@@ -13,28 +17,90 @@ const props = defineProps({
     required: true,
   },
 });
+
+const textData = computed(() => {
+  if (props.mode === "crop-switcher") {
+    return {
+      headerTitle: "Get some objects back",
+      listTitle:
+        "Tap object on photo to get it back. Or set objects manually below",
+      footer: {
+        left: "Enable all",
+        right: "Disable all",
+      },
+    };
+  }
+  if (props.mode === "downloader") {
+    return {
+      headerTitle: "Download specific objects",
+      listTitle: "Tap objects on photo or choose them from the list below",
+      footer: {
+        left: "Check all",
+        right: "Uncheck all",
+        button: checkedCropsCount.value
+          ? `Download / Share (${checkedCropsCount.value})`
+          : "Download / Share",
+      },
+    };
+  }
+  if (props.mode === "eraser") {
+    return {
+      headerTitle: "Erase more manually",
+      listTitle: "Paint over objects to erase",
+    };
+  }
+});
+const checkedCropsCount = computed(() => {
+  let result = 0;
+  props.imageData.crops.find((crop) => {
+    if (crop.visible) result++;
+  });
+  return result;
+});
+
+const downloadCrops = () => {
+  props.imageData.crops.forEach((crop, idx: number) => {
+    if (crop.visible) {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = crop.box[2];
+      tempCanvas.height = crop.box[3];
+
+      let ctx = tempCanvas.getContext("2d");
+      const img = new Image(crop.box[2], crop.box[3]);
+      img.src = crop.rgba;
+      img.onload = () => {
+        ctx?.drawImage(img, 0, 0);
+      };
+      setTimeout(() => {
+        const cropFile = tempCanvas.toDataURL("image/png");
+        saveFileFromURL(cropFile, `crop-object-${idx}`);
+        tempCanvas.remove();
+      }, 100);
+    }
+  });
+};
 </script>
 
 <template>
   <div class="editor">
     <header class="editor-header">
       <h1>
-        <template v-if="mode === 'crop-switcher'">
-          Get some objects back
-        </template>
-        <template v-if="mode === 'eraser'"> Erase more manually </template>
+        {{ textData.headerTitle }}
         <in-svg src="/img-v2/icon/close.svg" @click="$emit('close')" />
       </h1>
     </header>
-    <div class="crops-list" v-if="mode === 'crop-switcher'">
-      <p>Tap object on photo to get it back. Or set objects manually below</p>
+    <div class="crops-list" v-if="mode !== 'eraser'">
+      <p>{{ textData.listTitle }}</p>
       <ul>
         <li
           v-for="(crop, idx) in imageData.crops"
           :key="crop.index"
           @click.stop="$emit('cropClick', idx)"
         >
-          <ui-checkbox :isChecked="crop.visible" />
+          <ui-checkbox
+            :isChecked="crop.visible"
+            :square="mode === 'downloader'"
+          />
           <div class="crop-img">
             <img :src="crop.rgb" :alt="crop.label" />
           </div>
@@ -44,8 +110,19 @@ const props = defineProps({
         </li>
       </ul>
       <footer>
-        <button class="enable" @click="$emit('showAll')">Enable all</button>
-        <button class="disable" @click="$emit('hideAll')">Disable all</button>
+        <button class="enable" @click="$emit('showAll')">
+          {{ textData.footer.left }}
+        </button>
+        <button class="disable" @click="$emit('hideAll')">
+          {{ textData.footer.right }}
+        </button>
+        <ui-button
+          v-if="mode === 'downloader'"
+          :text="textData.footer.button"
+          icon="/img-v2/icon/download.svg"
+          blue
+          @click="downloadCrops"
+        />
       </footer>
     </div>
     <div class="eraser-controls" v-if="mode === 'eraser'">
@@ -175,12 +252,13 @@ const props = defineProps({
       left: 0;
       bottom: 0;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 48rem;
       background: var(--color-overlay);
       backdrop-filter: blur(5rem);
       padding: 0 40rem;
-      button {
+      button:not(.button) {
         @include text-body;
         color: var(--color-bright);
         background-color: transparent;
@@ -189,6 +267,10 @@ const props = defineProps({
         &:hover {
           color: var(--color-bright-hover);
         }
+      }
+
+      .button {
+        box-shadow: none;
       }
     }
   }
@@ -266,11 +348,21 @@ const props = defineProps({
         text-align: left;
       }
       footer {
-        position: unset;
+        position: relative;
         justify-content: space-between;
         background: unset;
         backdrop-filter: unset;
-        padding: 0;
+        padding: 40rem 0 20rem;
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          width: 100%;
+          height: 1rem;
+          background-color: var(--color-bright);
+          opacity: 0.1;
+        }
       }
     }
     .eraser-controls {

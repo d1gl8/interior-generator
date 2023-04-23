@@ -4,11 +4,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  square: {
+    type: Boolean,
+    default: false,
+  },
 });
 </script>
 
 <template>
-  <div :class="['checkbox', { checked: isChecked }]">
+  <div :class="['checkbox', { checked: isChecked, square }]">
     <in-svg class="back" src="/img-v2/icon/checkbox/background.svg" />
     <in-svg class="thumb" src="/img-v2/icon/checkbox/thumb.svg" />
   </div>
@@ -47,6 +51,28 @@ const props = defineProps({
         color: var(--color-toggle-on);
         left: 16rem;
       }
+    }
+  }
+  &.square {
+    width: 24rem;
+    height: 24rem;
+    background-color: var(--color-bright);
+    border-radius: 2rem;
+    &.checked {
+      &::after {
+        content: "";
+        position: absolute;
+        left: 6rem;
+        top: 6rem;
+        width: 12rem;
+        height: 12rem;
+        background-color: var(--color-toggle-on);
+        border-radius: 1rem;
+      }
+    }
+
+    svg {
+      display: none;
     }
   }
 }

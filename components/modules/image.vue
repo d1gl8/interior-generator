@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import useFiles from "@/use/files";
-const { sendFile, readFile, getFileFromUrl } = useFiles();
+const { sendFile, readFile, saveFileFromURL, getFileFromUrl } = useFiles();
 
 const props = defineProps({
   imageData: {
@@ -21,7 +21,7 @@ const props = defineProps({
 const emits = defineEmits(["newBrushSize", "maskedFile"]);
 
 const resultImage = ref(null);
-const crops = ref(null);
+const cropsCanvas = ref(null);
 
 const current = ref("after");
 const currentImage = computed(() => {
@@ -67,20 +67,20 @@ const currentImage = computed(() => {
 
 const showCrop = (idx: Number) => {
   const crop = props.imageData.crops[idx];
-  let ctx = crops?.value.getContext("2d");
+  let ctx = cropsCanvas.value.getContext("2d");
   const img = new Image(
     props.imageData.crops[idx].box[2],
     props.imageData.crops[idx].box[3]
   );
   img.src = props.imageData.crops[idx]?.rgba;
-  ctx?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
+  // ctx?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
   img.onload = () => {
     ctx?.drawImage(img, crop.box[0], crop.box[1]);
   };
 };
 const hideCrop = (idx: Number) => {
   const crop = props.imageData.crops[idx];
-  let ctx = crops?.value.getContext("2d");
+  let ctx = cropsCanvas.value.getContext("2d");
 
   // let imgBox = ctx.getImageData(
   //   crop.box[0],
@@ -109,14 +109,14 @@ const hideCrop = (idx: Number) => {
   // ctx.globalAlpha = 1;
 };
 const saveImage = async (mode: String = "local") => {
-  const tempCanvas = crops?.value.cloneNode(true);
+  const tempCanvas = cropsCanvas.value.cloneNode(true);
   let ctx = tempCanvas.getContext("2d");
 
   const background = new Image(size.value.w, size.value.h);
   background.src = props.imageData.output.image;
 
   background.onload = () => {
-    ctx.drawImage(crops.value, 0, 0);
+    ctx.drawImage(cropsCanvas.value, 0, 0);
     ctx.globalCompositeOperation = "destination-over";
     ctx.drawImage(background, 0, 0);
   };
@@ -129,12 +129,8 @@ const saveImage = async (mode: String = "local") => {
     }
     if (mode === "local") {
       const imageForSave = tempCanvas.toDataURL("image/png");
-      let downloadLink = document.createElement("a");
-      document.body.appendChild(downloadLink);
-      downloadLink.href = imageForSave;
-      downloadLink.target = "_self";
-      downloadLink.download = "cropped-interior";
-      downloadLink.click();
+      saveFileFromURL(imageForSave, "cropped-interior");
+      tempCanvas.remove();
     }
   }, 100);
 };
@@ -220,7 +216,7 @@ const sendMask = async () => {
     "image/png"
   );
   const brushFile = await getFileFromUrl(
-    brushCanvas.value.toDataURL(),
+    brushCanvas.value?.toDataURL(),
     "mask.png",
     "image/png"
   );
@@ -287,7 +283,7 @@ defineExpose({
     />
     <img :src="currentImage" alt="artixel image handler" />
     <canvas
-      ref="crops"
+      ref="cropsCanvas"
       class="canvas-crops"
       :width="props.imageData.output.size[0]"
       :height="props.imageData.output.size[1]"
@@ -346,6 +342,7 @@ defineExpose({
     }
     &.canvas-brush {
       cursor: none;
+      z-index: 4;
     }
   }
   .brush-cursor {
