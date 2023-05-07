@@ -3,16 +3,16 @@ const isDev = process.env.NODE_ENV !== "production";
 
 import { i18n } from "./locales/config";
 export default defineNuxtConfig({
-  devServer: {
-    https: {
-      key: fs.readFileSync("./localhost.key").toString(),
-      cert: fs.readFileSync("./localhost.crt").toString(),
-    },
-  },
+  // devServer: {
+  //   https: {
+  //     key: fs.readFileSync("./localhost.key").toString(),
+  //     cert: fs.readFileSync("./localhost.crt").toString(),
+  //   },
+  // },
   runtimeConfig: {
     public: {
       isDev,
-      apiBaseUrl: "", // !@ fallback?
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
     },
   },
   components: [

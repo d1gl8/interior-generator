@@ -8,10 +8,11 @@ export default function useFiles() {
       method: "POST",
       body: data,
     };
+    console.log(config.apiBaseUrl);
 
     try {
       const request = await useFetch(
-        `${config.apiBaseUrl}/${endpoint}`,
+        `${config.apiBaseUrl}/api/${endpoint}`,
         options
       );
 
