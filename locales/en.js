@@ -1,7 +1,7 @@
 export default {
   cleanerPhotoPage: {
     h1: "Clear your interior photo of unwanted furniture",
-    buttons: {
+    controls: {
       download: "Upload image",
     },
     problems: "Problems?",

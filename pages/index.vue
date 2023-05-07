@@ -1,15 +1,29 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, provide, nextTick } from "vue";
+import useCrops from "@/use/crops";
+import useFiles from "@/use/files";
+const config = useRuntimeConfig();
+provide("config", config);
+const { session } = await useSession();
+const { sendFile } = useFiles();
 
-const imageData = ref({
-  isGetted: false,
-  input: null,
-  output: {
-    image: null,
-    size: null,
-  },
-  crops: null,
-});
+let imageData = ref({});
+const initClearImageData = () => {
+  imageData.value = {
+    isGetted: false,
+    input: null,
+    output: {
+      image: null,
+      size: null,
+    },
+    crops: null,
+  };
+};
+initClearImageData();
+
+const { cropShowSwitcher, showAllCrops, hideAllCrops } = useCrops(
+  computed(() => imageData.value.crops)
+);
 
 const currentSection = computed(() => {
   if (!imageData.value.isGetted) return "upload";
@@ -24,6 +38,18 @@ const editor = ref({
   isOpen: false,
   mode: "crop-switcher",
 });
+
+const imageResultLoaded = async (data: any) => {
+  if (!data.isGetted) return;
+
+  imageData.value = data;
+
+  // !@ костыль
+  await nextTick();
+  showAllCrops();
+  setTimeout(hideAllCrops, 1000);
+  //
+};
 
 const editorOpen = (mode: string = editor.value.mode) => {
   if (document.documentElement.clientWidth < 768) {
@@ -51,49 +77,9 @@ const editorClose = () => {
   };
 };
 
-const intersectionsRender = (crop) => {
-  if (crop.intersections) {
-    crop.intersections.forEach((index) => {
-      const interIdx = imageData.value.crops.findIndex(
-        (crop) => crop.index === index
-      );
-      if (interIdx === -1) return;
-      if (imageData.value.crops[interIdx]?.visible) {
-        moduleImage.value.showCrop(interIdx);
-      } else {
-        console.log(interIdx);
-        moduleImage.value.hideCrop(interIdx);
-      }
-    });
-  }
-};
-
-const cropShowSwitcher = (idx: Number) => {
-  const crop = imageData.value.crops[idx];
-  crop.visible = !crop.visible;
-  if (crop.visible) {
-    moduleImage.value.showCrop(idx);
-  } else {
-    moduleImage.value.hideCrop(idx);
-  }
-  intersectionsRender(crop);
-};
-const showAllCrops = () => {
-  imageData.value.crops.forEach((crop: Object, idx: Number) => {
-    crop.visible = true;
-    moduleImage.value.showCrop(idx);
-  });
-};
-const hideAllCrops = () => {
-  imageData.value.crops.forEach((crop: Object, idx: Number) => {
-    crop.visible = false;
-    moduleImage.value.hideCrop(idx);
-  });
-};
 const brushSize = ref(0);
 const brushSizeChange = (size: string) => {
-  // emits("newBrushSize", e.target.value);
-  document.body.style.setProperty("--brush-size", `${size}rem`);
+  document.body.style.setProperty("--brush-size", `${size}rem`); // @! think about
   brushSize.value = +size;
 };
 
@@ -108,11 +94,27 @@ const toClipCopy = () => {
 };
 
 const newUpload = () => {
-  const fileInput = document.querySelector(".module-upload input[type=file]");
+  initClearImageData();
+  const fileInput = document.querySelector(".artixel-upload input[type=file]");
   fileInput.click();
 };
 
-onMounted(() => {
+const isOpenModal = ref(false);
+const report = ref("");
+const sendReport = async () => {
+  let reportBugFile = new Blob([report.value], { type: "txt" });
+  const reportSendData = new FormData();
+  reportSendData.append(
+    "report",
+    reportBugFile,
+    `report-bug-${Date.now()}.txt`
+  );
+  const reqBug = await sendFile(reportSendData, "report/bug");
+  report.value = "";
+  isOpenModal.value = false;
+};
+
+onMounted(async () => {
   brushSizeChange(
     getComputedStyle(document.body)
       .getPropertyValue("--brush-size")
@@ -122,16 +124,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="['image-cleaner', currentSection]">
+  <div :class="['artixel-photo-cleaner', currentSection]">
     <Header />
     <ModuleUpload
       ref="upload"
       v-show="!imageData.isGetted"
       :data="imageData"
-      @loaded="imageData = $event"
+      @loaded="imageResultLoaded"
     />
     <template v-if="imageData.isGetted">
-      <LazyModuleImage
+      <ModuleImage
         ref="moduleImage"
         :imageData="imageData"
         :isEraser="editor.mode === 'eraser'"
@@ -161,12 +163,34 @@ onMounted(() => {
       @brushSizeChange="brushSizeChange(+$event.target.value)"
       @sendMask="moduleImage.sendMask"
     />
-    <Footer />
+    <Footer @clickProblems="isOpenModal = true" />
+    <Modal class="report" :open="isOpenModal" @modalClose="isOpenModal = false">
+      <h2>Problems?</h2>
+      <form @submit.prevent>
+        <textarea
+          class="report-text"
+          v-model="report"
+          placeholder="Tell us what's going wrong"
+        />
+        <ui-button
+          text="Send"
+          icon="/img/icon/mail.svg"
+          blue
+          :disabled="!report.length"
+          @click="sendReport"
+        />
+      </form>
+      <in-svg
+        class="close"
+        src="/img/icon/close.svg"
+        @click="isOpenModal = false"
+      />
+    </Modal>
   </div>
 </template>
 
 <style lang="scss">
-.image-cleaner {
+.artixel-photo-cleaner {
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -176,16 +200,43 @@ onMounted(() => {
 
   &.image,
   &.edit {
-    .app-header {
+    .artixel-logo {
       display: none;
     }
   }
 
   &.edit {
     overflow: hidden;
-    .result-image {
+    .artixel-result {
       position: relative;
       z-index: 3;
+    }
+  }
+
+  .report {
+    .window {
+      position: relative;
+      h2 {
+        font-size: 26rem;
+        line-height: 32rem;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 30rem;
+      }
+      .report-text {
+        @include text-body;
+        resize: none;
+        width: 100%;
+        height: 200rem;
+        border: 2rem solid var(--color-input);
+        border-radius: 6rem;
+        padding: 13rem 20rem;
+        margin-bottom: 28rem;
+      }
+      .close {
+        top: 20rem;
+        right: 20rem;
+      }
     }
   }
 
@@ -199,12 +250,12 @@ onMounted(() => {
       grid-template-rows: 50rem 258rem 100rem;
       grid-template-areas:
         "header selector"
-        "result buttons"
-        "footer buttons";
+        "result controls"
+        "footer controls";
       column-gap: 40rem;
       row-gap: 40rem;
 
-      .app-header {
+      .artixel-logo {
         grid-area: "header";
         display: flex;
         margin-bottom: 0;
@@ -213,7 +264,7 @@ onMounted(() => {
         }
       }
 
-      .app-footer {
+      .artixel-contacts {
         grid-area: footer;
         margin-bottom: auto;
       }
@@ -226,7 +277,7 @@ onMounted(() => {
       grid-template-rows: 50rem 429rem 24rem;
       grid-template-areas:
         "header selector"
-        "result buttons"
+        "result controls"
         "footer footer";
     }
   }
@@ -236,7 +287,7 @@ onMounted(() => {
       grid-template-columns: 900rem 1fr;
       grid-template-rows: 50rem 600rem 24rem;
       padding-bottom: 48rem;
-      .app-header {
+      .artixel-logo {
         h1 {
           display: block;
         }

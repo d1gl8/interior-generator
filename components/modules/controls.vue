@@ -31,14 +31,14 @@ defineExpose({
 </script>
 
 <template>
-  <div class="buttons">
+  <main class="artixel-controls">
     <ui-button text="Get some objects back" @click="$emit('edit')" />
     <ui-button
       text="Erase more manually"
       icon="/img/icon/erase.svg"
       @click="$emit('eraser')"
     />
-    <div class="drop-wrapper" ref="drop">
+    <div class="button-with-dropper" ref="drop">
       <ui-button
         text="Download / Share"
         icon="/img/icon/download.svg"
@@ -74,11 +74,11 @@ defineExpose({
       icon="/img/icon/upload.svg"
       @click="$emit('upload')"
     />
-  </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
-.buttons {
+.artixel-controls {
   width: 100%;
   margin-bottom: 60rem;
   .button {
@@ -86,7 +86,7 @@ defineExpose({
       margin-bottom: 28rem;
     }
   }
-  .drop-wrapper {
+  .button-with-dropper {
     @include text-body;
     position: relative;
     width: inherit;
@@ -128,8 +128,8 @@ defineExpose({
 }
 
 @include tablet {
-  .buttons {
-    grid-area: buttons;
+  .artixel-controls {
+    grid-area: controls;
     width: 260rem;
     margin-bottom: auto;
   }

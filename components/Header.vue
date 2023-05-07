@@ -1,14 +1,14 @@
 <script setup lang="ts"></script>
 
 <template>
-  <header class="app-header">
+  <header class="artixel-logo">
     <in-svg src="/img/logo.svg" />
     <h1>Clear your interior photo of unwanted furniture</h1>
   </header>
 </template>
 
 <style lang="scss">
-.app-header {
+.artixel-logo {
   text-align: center;
   margin-top: 162rem;
   svg {

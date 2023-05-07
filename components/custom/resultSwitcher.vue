@@ -15,7 +15,7 @@ const isChecked = (name: String) => {
 </script>
 
 <template>
-  <div class="image-selector">
+  <div class="result-switcher">
     <label for="before" class="before" @click="$emit('change', 'before')">
       <input
         type="radio"
@@ -38,7 +38,7 @@ const isChecked = (name: String) => {
 </template>
 
 <style lang="scss" scoped>
-.image-selector {
+.result-switcher {
   width: 190rem;
   margin-bottom: 28rem;
   label {

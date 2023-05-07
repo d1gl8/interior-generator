@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import useFiles from "@/use/files";
 const { sendFile, readFile, saveFileFromURL, getFileFromUrl } = useFiles();
 
@@ -21,8 +21,8 @@ const props = defineProps({
 const emits = defineEmits(["newBrushSize", "maskedFile"]);
 
 const resultImage = ref(null);
-const cropsCanvas = ref(null);
-const cropsHide = ref(null);
+const canvasCrops = ref(null);
+const canvasCropsHide = ref(null);
 
 const current = ref("after");
 const currentImage = computed(() => {
@@ -31,64 +31,15 @@ const currentImage = computed(() => {
     : props.imageData.input;
 });
 
-const showCrop = (idx: Number) => {
-  const crop = props.imageData.crops[idx];
-  const ctx = cropsCanvas.value.getContext("2d");
-  const ctxHide = cropsHide.value.getContext("2d");
-  const img = new Image(
-    props.imageData.crops[idx].box[2],
-    props.imageData.crops[idx].box[3]
-  );
-  img.src = props.imageData.crops[idx]?.rgba;
-  ctxHide?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
-  img.onload = () => {
-    ctx?.drawImage(img, crop.box[0], crop.box[1]);
-  };
-};
-const hideCrop = (idx: Number) => {
-  const crop = props.imageData.crops[idx];
-  let ctx = cropsCanvas.value.getContext("2d");
-
-  let imgBox = ctx.getImageData(
-    crop.box[0],
-    crop.box[1],
-    crop.box[2],
-    crop.box[3]
-  );
-
-  for (let i = 0; i < imgBox.data.length; i += 4) {
-    if (imgBox.data[i + 3] !== 0) {
-      imgBox.data[i] = 0;
-      imgBox.data[i + 1] = 106;
-      imgBox.data[i + 2] = 0;
-      // imgBox.data[i + 3] = 120;
-    }
-  }
-
-  const ctxHide = cropsHide.value.getContext("2d");
-  ctxHide.globalAlpha = 0.5;
-  const tempCanvas = document.createElement("canvas");
-  tempCanvas.width = crop.box[2];
-  tempCanvas.height = crop.box[3];
-
-  let ctxTemp = tempCanvas.getContext("2d");
-  // ctxTemp.globalAlpha = 0.5;
-  ctxTemp.putImageData(imgBox, 0, 0);
-
-  ctx?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
-  ctxHide.globalCompositeOperation = "destination-over";
-  ctxHide.drawImage(tempCanvas, crop.box[0], crop.box[1]);
-  tempCanvas.remove();
-};
 const saveImage = async (mode: String = "local") => {
-  const tempCanvas = cropsCanvas.value.cloneNode(true);
+  const tempCanvas = canvasCrops.value.cloneNode(true);
   let ctx = tempCanvas.getContext("2d");
 
   const background = new Image(size.value.w, size.value.h);
   background.src = props.imageData.output.image;
 
   background.onload = () => {
-    ctx.drawImage(cropsCanvas.value, 0, 0);
+    ctx.drawImage(canvasCrops.value, 0, 0);
     ctx.globalCompositeOperation = "destination-over";
     ctx.drawImage(background, 0, 0);
   };
@@ -107,6 +58,29 @@ const saveImage = async (mode: String = "local") => {
   }, 100);
 };
 
+const loading = ref(false);
+const sendMask = async () => {
+  loading.value = true;
+  const imageElem = document.querySelector(".artixel-result img");
+  const brushFile = await getFileFromUrl(
+    canvasBrush.value?.toDataURL(),
+    "mask.png",
+    "image/png"
+  );
+
+  const toSendFormData = new FormData();
+  toSendFormData.append("image_file", imageElem?.src);
+  toSendFormData.append("mask_file", brushFile);
+
+  const requestMaskedFile = await sendFile(toSendFormData, "cleaner/mask");
+  const maskedFile = requestMaskedFile.data;
+
+  emits("maskedFile", maskedFile);
+  ctx.value.clearRect(0, 0, size.value.w, size.value.h);
+  brushBuffer.value = ctx.value.getImageData(0, 0, size.value.w, size.value.h);
+  loading.value = false;
+};
+
 const brushCursor = ref(null);
 const x = ref(0);
 const y = ref(0);
@@ -119,94 +93,71 @@ const cursorLeave = () => {
   y.value = -props.brushSize * 2;
 };
 
-const brushCanvas = ref(null);
-const points = ref([]);
+const canvasBrush = ref(null);
 const brushBuffer = ref(null);
 const ctx = ref();
-const offset = ref(0);
-const coord = ref([]);
-let action = "up";
+const isDrawing = ref(false);
+const lastPoint = ref({ x: 0, y: 0 });
+
+const distanceBetween = (point1, point2) => {
+  return Math.sqrt(
+    Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
+  );
+};
+const angleBetween = (point1, point2) => {
+  return Math.atan2(point2.x - point1.x, point2.y - point1.y);
+};
+
 const initBrush = () => {
   cursorLeave();
-  ctx.value = brushCanvas.value?.getContext("2d");
-  ctx.value.lineWidth = props.brushSize;
-  offset.value = 10000;
-  ctx.value.globalAlpha = 0.75;
-  ctx.value.shadowBlur = 2;
-  ctx.value.shadowColor = "#00FF00";
-  ctx.value.shadowOffsetX = -offset.value;
+  ctx.value = canvasBrush.value?.getContext("2d");
 
-  points.value = [];
+  ctx.value.fillStyle = "#00FF00";
+  ctx.value.strokeStyle = "#00FF00";
+  ctx.value.globalAlpha = 0.075;
+  ctx.value.lineWidth = 0;
+  ctx.value.globalCompositeOperation = "source-over";
   brushBuffer.value = ctx.value.getImageData(0, 0, size.value.w, size.value.h);
 };
 const mDown = (e: Event, touch: Boolean = false) => {
-  let x, y;
-  action = "down";
+  isDrawing.value = true;
   if (!touch) {
-    x = e.offsetX;
-    y = e.offsetY;
+    lastPoint.value = { x: e.offsetX, y: e.offsetY };
   } else {
-    x = e.targetTouches[0].clientX - size.value.left;
-    y = e.targetTouches[0].clientY - size.value.top;
+    lastPoint.value = {
+      x: e.targetTouches[0].clientX - size.value.left,
+      y: e.targetTouches[0].clientY - size.value.top,
+    };
   }
-  points.value.push([x, y]);
 };
 const mUp = (e: Event) => {
-  action = "up";
-  points.value = [];
+  isDrawing.value = false;
   brushBuffer.value = ctx.value.getImageData(0, 0, size.value.w, size.value.h);
 };
 const mMove = (e: Event, touch: Boolean = false) => {
-  if (action == "down") {
-    ctx.value.putImageData(brushBuffer.value, 0, 0);
-    let x, y;
-    if (!touch) {
-      x = e.offsetX;
-      y = e.offsetY;
-    } else {
-      x = e.targetTouches[0].clientX - size.value.left;
-      y = e.targetTouches[0].clientY - size.value.top;
-    }
-    points.value.push([x, y]);
-    ctx.value.beginPath();
-    ctx.value.moveTo(points.value[0][0] + offset.value, points.value[0][1]);
-    for (let i = 1; i < points.value.length; i++) {
-      ctx.value.lineTo(points.value[i][0] + offset.value, points.value[i][1]);
-    }
-    ctx.value.stroke();
+  if (!isDrawing.value) return;
+  let currentPoint;
+  if (!touch) {
+    currentPoint = { x: e.offsetX, y: e.offsetY };
+  } else {
+    currentPoint = {
+      x: e.targetTouches[0].clientX - size.value.left,
+      y: e.targetTouches[0].clientY - size.value.top,
+    };
   }
-};
+  let dist = distanceBetween(lastPoint.value, currentPoint);
+  let angle = angleBetween(lastPoint.value, currentPoint);
 
-const loading = ref(false);
-const sendMask = async () => {
-  loading.value = true;
-  const imageElem = resultImage.value.querySelector(".result-image img");
+  for (let i = 0; i < dist; i += 3) {
+    let y = lastPoint.value.y + Math.cos(angle) * i;
+    let x = lastPoint.value.x + Math.sin(angle) * i;
+    ctx.value.beginPath();
+    ctx.value.arc(x, y, props.brushSize / 2, false, Math.PI * 2, false);
+    ctx.value.closePath();
+    ctx.value.fill();
+  }
 
-  const imageFile = await getFileFromUrl(
-    imageElem.src,
-    "image-for-mask.png",
-    "image/png"
-  );
-  const brushFile = await getFileFromUrl(
-    brushCanvas.value?.toDataURL(),
-    "mask.png",
-    "image/png"
-  );
-
-  const toSendFormData = new FormData();
-  toSendFormData.append("image_file", imageFile);
-  toSendFormData.append("mask_file", brushFile);
-
-  const requestMaskedFile = await sendFile(
-    toSendFormData,
-    "/api/user_mask_predict"
-  );
-  const responseMaskedFile = await requestMaskedFile.blob();
-  const maskedFile = await readFile(responseMaskedFile, "url");
-  emits("maskedFile", maskedFile);
-  ctx.value.clearRect(0, 0, size.value.w, size.value.h);
-  brushBuffer.value = ctx.value.getImageData(0, 0, size.value.w, size.value.h);
-  loading.value = false;
+  lastPoint.value = currentPoint;
 };
 
 watch(
@@ -229,8 +180,6 @@ onMounted(() => {
 });
 
 defineExpose({
-  showCrop,
-  hideCrop,
   saveImage,
   initBrush,
   sendMask,
@@ -238,38 +187,42 @@ defineExpose({
 </script>
 
 <template>
-  <image-selector :checked="current" @change="current = $event" />
+  <result-switcher :checked="current" @change="current = $event" />
 
   <div
     v-if="currentImage"
-    class="result-image"
+    class="artixel-result"
     ref="resultImage"
     @mousemove="setCursorPosition"
     @touchmove="setCursorPosition"
     @mouseleave="cursorLeave"
   >
     <lazy-in-svg class="spinner" v-if="loading" src="/img/icon/spinner.svg" />
-    <img :src="currentImage" alt="artixel image handler" />
+    <img
+      :src="currentImage"
+      alt="artixel interior image cleaner result"
+      loading="eager"
+    />
     <canvas
-      ref="cropsHide"
+      ref="canvasCropsHide"
       class="canvas-hide"
       :width="props.imageData.output.size[0]"
       :height="props.imageData.output.size[1]"
     />
     <canvas
-      ref="cropsCanvas"
+      ref="canvasCrops"
       class="canvas-crops"
       :width="props.imageData.output.size[0]"
       :height="props.imageData.output.size[1]"
     />
     <canvas
       v-show="isEraser"
-      ref="brushCanvas"
+      ref="canvasBrush"
       class="canvas-brush"
       :width="size.w"
       :height="size.h"
-      @mousedown="mDown($event, true)"
-      @touchstart="mDown"
+      @mousedown="mDown"
+      @touchstart="mDown($event, true)"
       @mousemove="mMove"
       @touchmove="mMove($event, true)"
       @mouseup="mUp"
@@ -285,8 +238,7 @@ defineExpose({
 </template>
 
 <style lang="scss">
-.result-image {
-  // --brush-size: 30rem;
+.artixel-result {
   position: relative;
   width: 374rem;
   height: 252rem;
@@ -315,10 +267,6 @@ defineExpose({
       height: 100%;
       object-fit: contain;
     }
-    // .canvas-crops {
-
-    //   z-index: 2;
-    // }
     &.canvas-brush {
       cursor: none;
       z-index: 3;

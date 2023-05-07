@@ -86,7 +86,11 @@ const downloadCrops = () => {
     <header class="editor-header">
       <h1>
         {{ textData.headerTitle }}
-        <in-svg src="/img/icon/close.svg" @click="$emit('close')" />
+        <in-svg
+          class="close"
+          src="/img/icon/close.svg"
+          @click="$emit('close')"
+        />
       </h1>
     </header>
     <div class="crops-list" v-if="mode !== 'eraser'">
@@ -102,7 +106,7 @@ const downloadCrops = () => {
             :square="mode === 'downloader'"
           />
           <div class="crop-img">
-            <img :src="crop.rgb" :alt="crop.label" />
+            <img :src="crop.rgb" :alt="crop.label" loading="lazy" />
           </div>
           <span>
             {{ crop.label }}
@@ -127,7 +131,7 @@ const downloadCrops = () => {
     </div>
     <div class="eraser-controls" v-if="mode === 'eraser'">
       <p>Paint over objects to erase</p>
-      <label for="brush-range">
+      <label class="range" for="brush-range">
         <span class="range-header">
           <span>Brush</span>
           <span>{{ brushSize }}</span>
@@ -178,16 +182,9 @@ const downloadCrops = () => {
       color: var(--color-header);
       font-size: 23rem;
       line-height: 23rem;
-      svg {
-        position: absolute;
+      .close {
         right: 0;
         color: var(--color-bright);
-        width: 32rem;
-        height: 32rem;
-        cursor: pointer;
-        &:hover {
-          color: var(--color-bright-hover);
-        }
       }
     }
   }
@@ -285,9 +282,9 @@ const downloadCrops = () => {
       width: 100%;
       margin-bottom: 40rem;
     }
-    label {
+    .range {
       width: 156rem;
-      .range-header {
+      &-header {
         display: flex;
         justify-content: space-between;
         margin-bottom: 14rem;
@@ -305,6 +302,7 @@ const downloadCrops = () => {
         background-color: var(--color-bright);
         border-radius: 8rem;
         margin: 8rem 0;
+        cursor: pointer;
         &::-webkit-slider-runnable-track {
           box-shadow: none;
           border: none;
@@ -380,7 +378,7 @@ const downloadCrops = () => {
         background-color: var(--color-bright);
         opacity: 0.1;
       }
-      label {
+      .range {
         width: 100%;
         margin-bottom: 30rem;
       }

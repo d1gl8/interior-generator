@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import useFiles from "@/use/files";
 const { readFile, sendFile } = useFiles();
 
+const config = inject("config");
 const input = ref(null);
 
 const loading = ref(false);
@@ -30,9 +31,6 @@ const uploadImg = async (e: Event) => {
   loading.value = true;
   console.clear();
 
-  // const back = await fetch(`http://localhost:3010/`);
-  // console.log(await back.json());
-
   let imageForRemover;
   e.dataTransfer
     ? (imageForRemover = e.dataTransfer.files[0])
@@ -47,25 +45,12 @@ const uploadImg = async (e: Event) => {
 
   const toSendFormData = new FormData();
   toSendFormData.append("file", imageForRemover);
-  const requestFormData = await sendFile(toSendFormData, "/api/predict");
-  const responseFormData = await requestFormData.formData();
 
-  const image = await readFile(responseFormData.get("output"), "url");
+  const requestFormData = await sendFile(toSendFormData, "cleaner/image");
 
-  const { crops, size } = JSON.parse(
-    await readFile(responseFormData.get("locations"))
-  );
-  for (const entry of responseFormData.entries()) {
-    const key = entry[0];
-    const value = entry[1];
-    if (key.includes("rgb")) {
-      const id = +key.substring(key.indexOf("_") + 1, key.length);
-      const crop = crops.find((crop) => crop.index === id);
-      if (key.includes("rgb_")) crop.rgb = await readFile(value, "url");
-      if (key.includes("rgba_")) crop.rgba = await readFile(value, "url");
-      crop.visible = false;
-    }
-  }
+  const { crops, width, height } = requestFormData.data.value;
+  const image = requestFormData.data.value.output;
+  const size = [width, height];
 
   emits("loaded", {
     isGetted: true,
@@ -82,21 +67,21 @@ const uploadImg = async (e: Event) => {
 </script>
 
 <template>
-  <main class="module-upload">
+  <div class="artixel-upload">
     <ui-input-file
       v-show="!loading"
       ref="input"
-      id="image-to-remove"
+      id="image-to-clean"
       text="Upload image"
       icon="/img/icon/upload.svg"
       @change="uploadImg"
     />
     <lazy-in-svg v-if="loading" class="spinner" src="/img/icon/spinner.svg" />
-  </main>
+  </div>
 </template>
 
 <style lang="scss">
-.module-upload {
+.artixel-upload {
   .spinner {
     @include spinner;
   }

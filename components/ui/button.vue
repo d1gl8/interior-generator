@@ -33,7 +33,6 @@ const props = defineProps({
   background-color: var(--color-secondary-button);
   border-radius: 10rem;
   padding: 12rem 20rem 14rem;
-  cursor: pointer;
   svg {
     width: 24rem;
     height: 24rem;
@@ -42,6 +41,12 @@ const props = defineProps({
   &.blue {
     color: var(--color-bright);
     background: var(--color-main-button);
+  }
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+  &:disabled {
+    opacity: 0.3;
   }
 }
 </style>

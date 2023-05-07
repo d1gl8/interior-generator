@@ -1,8 +1,8 @@
 <script setup lang="ts"></script>
 
 <template>
-  <footer class="app-footer">
-    <div class="problems">
+  <footer class="artixel-contacts">
+    <div class="problems" @click="$emit('clickProblems')">
       <in-svg src="/img/icon/info.svg" />
       <span>
         {{ $t("cleanerPhotoPage.problems") }}
@@ -18,7 +18,7 @@
 </template>
 
 <style lang="scss" scoped>
-.app-footer {
+.artixel-contacts {
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -33,6 +33,7 @@
     font-size: 18rem;
     line-height: 23rem;
     &.problems {
+      cursor: pointer;
       color: var(--color-link);
       svg {
         margin-right: 8rem;

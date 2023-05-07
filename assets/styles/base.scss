@@ -67,6 +67,16 @@ html {
 svg {
   display: block;
   color: inherit;
+  &.close {
+    position: absolute;
+    color: var(--color-icon);
+    width: 32rem;
+    height: 32rem;
+    cursor: pointer;
+    &:hover {
+      color: var(--color-bright-hover);
+    }
+  }
 }
 
 img {

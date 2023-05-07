@@ -1,17 +1,24 @@
 export default function useFiles() {
-  const sendFile = async (data: FormData, endpoint: String) => {
+  const config = useRuntimeConfig();
+  const sendFile = async (data: FormData, endpoint: string) => {
     const options = {
-      headers: {},
+      headers: {
+        // "session": session.value?.id,
+      },
       method: "POST",
       body: data,
     };
-    const request = await fetch(
-      `${useRuntimeConfig().apiPath}${endpoint}`,
-      // `http://localhost:3001/post`,
-      options
-    );
 
-    return request;
+    try {
+      const request = await useFetch(
+        `${config.apiBaseUrl}/${endpoint}`,
+        options
+      );
+
+      return request;
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const readFile = (file: File, as = "text") => {
@@ -36,6 +43,7 @@ export default function useFiles() {
     downloadLink.target = "_self";
     downloadLink.download = name;
     downloadLink.click();
+    downloadLink.remove();
   };
 
   const getFileFromUrl = async (url: URL, name: string, type: string) => {
