@@ -36,15 +36,13 @@ const saveImage = async (mode: String = "local") => {
   let ctx = tempCanvas.getContext("2d");
 
   const background = new Image(size.value.w, size.value.h);
+  background.crossOrigin = "anonymous";
   background.src = props.imageData.output.image;
 
   background.onload = () => {
     ctx.drawImage(canvasCrops.value, 0, 0);
     ctx.globalCompositeOperation = "destination-over";
     ctx.drawImage(background, 0, 0);
-  };
-
-  setTimeout(() => {
     if (mode === "clip") {
       tempCanvas.toBlob((blob: Blob) =>
         navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
@@ -53,9 +51,9 @@ const saveImage = async (mode: String = "local") => {
     if (mode === "local") {
       const imageForSave = tempCanvas.toDataURL("image/png");
       saveFileFromURL(imageForSave, "cropped-interior");
-      tempCanvas.remove();
     }
-  }, 100);
+    tempCanvas.remove();
+  };
 };
 
 const loading = ref(false);

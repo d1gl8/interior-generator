@@ -48,6 +48,14 @@ export default function useCrops(crops: object) {
 
     let ctxTemp = tempCanvas.getContext("2d");
     ctxTemp?.putImageData(cropBox, 0, 0);
+    // ctxTemp.lineWidth = 4;
+    // ctxTemp.strokeStyle = "#50C200";
+    // ctxTemp?.beginPath();
+    // crop.contour.forEach((point: Array<number>) => {
+    //   ctxTemp?.lineTo(point[0], point[1]);
+    // });
+    // ctxTemp?.closePath();
+    // ctxTemp.stroke();
 
     ctxCrops?.clearRect(crop.box[0], crop.box[1], crop.box[2], crop.box[3]);
     ctxHide.globalCompositeOperation = "destination-over";
@@ -58,7 +66,7 @@ export default function useCrops(crops: object) {
   const intersectionsRender = (crop) => {
     if (crop.intersections) {
       crop.intersections.forEach((index) => {
-        const interIdx = crops.findIndex((crop) => crop.index === index);
+        const interIdx = crops.value.findIndex((crop) => crop.index === index);
         if (interIdx === -1) return;
         if (crops.value[interIdx]?.visible) {
           showCrop(interIdx);

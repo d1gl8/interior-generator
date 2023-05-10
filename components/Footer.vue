@@ -10,9 +10,7 @@
     </div>
     <div class="mail">
       <in-svg src="/img/icon/mail.svg" />
-      <span>
-        {{ $t("cleanerPhotoPage.mail") }}
-      </span>
+      <span> contact@artixel.io </span>
     </div>
   </footer>
 </template>
