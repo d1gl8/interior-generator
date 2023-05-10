@@ -1,14 +1,14 @@
 export default function useFiles() {
   const config = useRuntimeConfig();
   const sendFile = async (data: FormData, endpoint: string) => {
+    const { session } = await useSession();
     const options = {
       headers: {
-        // "session": session.value?.id,
+        session: session.value?.id,
       },
       method: "POST",
       body: data,
     };
-    console.log(config.apiBaseUrl);
 
     try {
       const request = await useFetch(
