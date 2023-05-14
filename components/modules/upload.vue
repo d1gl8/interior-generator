@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, inject } from "vue";
+import { ref } from "vue";
 import useFiles from "@/use/files";
 const { readFile, sendFile } = useFiles();
 
-const config = inject("config");
+const config = useRuntimeConfig();
 const input = ref(null);
 
 const loading = ref(false);
@@ -39,7 +39,6 @@ const uploadImg = async (e: Event) => {
     loading.value = false;
     return;
   }
-  resetData();
 
   const input = await readFile(imageForRemover, "url");
 
@@ -63,6 +62,7 @@ const uploadImg = async (e: Event) => {
   });
 
   loading.value = false;
+  e.target.value = null;
 };
 </script>
 

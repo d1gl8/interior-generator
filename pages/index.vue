@@ -3,8 +3,6 @@ import { ref, computed, onMounted, provide, nextTick } from "vue";
 import useCrops from "@/use/crops";
 import useFiles from "@/use/files";
 const config = useRuntimeConfig();
-provide("config", config);
-const { session } = await useSession();
 const { sendFile } = useFiles();
 
 let imageData = ref({});
@@ -44,11 +42,8 @@ const imageResultLoaded = async (data: any) => {
 
   imageData.value = data;
 
-  // !@ костыль
   await nextTick();
-  showAllCrops();
-  setTimeout(hideAllCrops, 1000);
-  //
+  hideAllCrops();
 };
 
 const editorOpen = (mode: string = editor.value.mode) => {
