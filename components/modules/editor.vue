@@ -55,6 +55,7 @@ const textData = computed(() => {
 });
 
 const cropClck = (idx: number) => {
+  emits("cropClick", idx);
   if (props.mode === "downloader") {
     const i = cropsForDownload.value.findIndex((i) => i === idx);
     i < 0
@@ -62,7 +63,6 @@ const cropClck = (idx: number) => {
       : cropsForDownload.value.splice(i, 1);
     console.log(cropsForDownload.value);
   }
-  if (props.mode === "crop-switcher") emits("cropClick", idx);
 };
 
 const asyncImgToURL = (
@@ -93,8 +93,8 @@ const downloadCrops = () => {
     const crop = props.imageData.crops[idx];
     const cropFile = await asyncImgToURL(
       crop.rgba,
-      crop.size.width,
-      crop.size.height
+      crop.box.width,
+      crop.box.height
     );
     saveFileFromURL(cropFile, `crop-object-${idx}`);
   });

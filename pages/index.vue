@@ -60,6 +60,7 @@ const editorOpen = (mode: string = editor.value.mode) => {
     mode,
   };
   if (mode === "eraser") moduleImage.value.initBrush(); // !@ think about
+  if (mode === "downloader") hideAllCrops();
 };
 const editorClose = () => {
   if (document.documentElement.clientWidth < 768) {
