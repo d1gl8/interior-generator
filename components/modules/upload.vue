@@ -46,12 +46,12 @@ const uploadImg = async (e: Event) => {
   toSendFormData.append("file", imageForRemover);
 
   const requestFormData = await sendFile(toSendFormData, "cleaner/image");
-
   const { crops, width, height } = requestFormData.data.value;
   const image = requestFormData.data.value.output;
-  const size = [width, height];
+  const size = { width, height };
 
   emits("loaded", {
+    state: 1,
     isGetted: true,
     input,
     output: {

@@ -8,6 +8,7 @@ const { sendFile } = useFiles();
 let imageData = ref({});
 const initClearImageData = () => {
   imageData.value = {
+    state: 0,
     isGetted: false,
     input: null,
     output: {
@@ -52,6 +53,7 @@ const editorOpen = (mode: string = editor.value.mode) => {
     body.style.position = "fixed";
     body.style.top = 0;
   }
+  imageData.value.state = 1;
 
   editor.value = {
     isOpen: true,
@@ -104,7 +106,7 @@ const sendReport = async () => {
     reportBugFile,
     `report-bug-${Date.now()}.txt`
   );
-  const reqBug = await sendFile(reportSendData, "report/bug");
+  await sendFile(reportSendData, "report/bug");
   report.value = "";
   isOpenModal.value = false;
 };
@@ -132,7 +134,9 @@ onMounted(async () => {
         ref="moduleImage"
         :imageData="imageData"
         :isEraser="editor.mode === 'eraser'"
+        :isCropSwitcher="editor.mode === 'crop-switcher'"
         :brushSize="brushSize"
+        @changeImageState="imageData.state = $event"
         @maskedFile="imageData.output.image = $event"
       />
       <LazyModuleControls

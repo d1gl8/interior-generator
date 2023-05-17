@@ -1,21 +1,41 @@
+import { UseFetchOptions } from "nuxt/dist/app/composables";
+
 export default function useFiles() {
   const config = useRuntimeConfig();
+
+  const useApiFetch = (url: string, options: UseFetchOptions<object> = {}) => {
+    options.baseURL = `${config.apiBaseUrl}/api`;
+    return useFetch(url, {
+      ...options,
+      async onResponse({ request, response, options }) {},
+      async onResponseError({ request, response, options }) {
+        console.log("[fetch response error]");
+      },
+
+      async onRequest({ request, options }) {
+        const sessionObject = await useSession();
+
+        const headers = new Headers(options.headers);
+        headers.set("session", sessionObject.session.value.id);
+        headers.set("request-start", Date.now().toString());
+
+        options.headers = headers;
+      },
+
+      async onRequestError({ request, options, error }) {
+        console.log("[fetch request error]");
+      },
+    });
+  };
+
   const sendFile = async (data: FormData, endpoint: string) => {
     let options = {
       method: "POST",
       body: data,
     };
 
-    if (process.client) {
-      const s = await useSession();
-      options.headers = { session: s.session.value?.id };
-    }
-
     try {
-      const request = await useFetch(
-        `${config.apiBaseUrl}/api/${endpoint}`,
-        options
-      );
+      const request = await useApiFetch(endpoint, options);
 
       return request;
     } catch (err) {

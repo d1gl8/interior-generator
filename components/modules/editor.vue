@@ -18,6 +18,9 @@ const props = defineProps({
   },
 });
 
+const emits = defineEmits(["cropClick"]);
+
+const isCropsHideShow = ref(true);
 const textData = computed(() => {
   if (props.mode === "crop-switcher") {
     return {
@@ -37,8 +40,8 @@ const textData = computed(() => {
       footer: {
         left: "Check all",
         right: "Uncheck all",
-        button: checkedCropsCount.value
-          ? `Download / Share (${checkedCropsCount.value})`
+        button: cropsForDownload.value.length
+          ? `Download / Share (${cropsForDownload.value.length})`
           : "Download / Share",
       },
     };
@@ -50,33 +53,50 @@ const textData = computed(() => {
     };
   }
 });
-const checkedCropsCount = computed(() => {
-  let result = 0;
-  props.imageData.crops.find((crop) => {
-    if (crop.visible) result++;
+
+const cropClck = (idx: number) => {
+  if (props.mode === "downloader") {
+    const i = cropsForDownload.value.findIndex((i) => i === idx);
+    i < 0
+      ? cropsForDownload.value.push(idx)
+      : cropsForDownload.value.splice(i, 1);
+    console.log(cropsForDownload.value);
+  }
+  if (props.mode === "crop-switcher") emits("cropClick", idx);
+};
+
+const asyncImgToURL = (
+  src: string,
+  width: number,
+  height: number,
+  mime: string = "image/png"
+) => {
+  return new Promise(function (res, rej) {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    const img = new Image(width, height);
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0);
+      res(canvas.toDataURL("image/png"));
+    };
   });
-  return result;
-});
+};
 
+const cropsForDownload = ref([]);
 const downloadCrops = () => {
-  props.imageData.crops.forEach((crop, idx: number) => {
-    if (crop.visible) {
-      const tempCanvas = document.createElement("canvas");
-      tempCanvas.width = crop.box[2];
-      tempCanvas.height = crop.box[3];
-
-      let ctx = tempCanvas.getContext("2d");
-      const img = new Image(crop.box[2], crop.box[3]);
-      img.src = crop.rgba;
-      img.onload = () => {
-        ctx?.drawImage(img, 0, 0);
-      };
-      setTimeout(() => {
-        const cropFile = tempCanvas.toDataURL("image/png");
-        saveFileFromURL(cropFile, `crop-object-${idx}`);
-        tempCanvas.remove();
-      }, 100);
-    }
+  cropsForDownload.value.forEach(async (idx: number) => {
+    const crop = props.imageData.crops[idx];
+    const cropFile = await asyncImgToURL(
+      crop.rgba,
+      crop.size.width,
+      crop.size.height
+    );
+    saveFileFromURL(cropFile, `crop-object-${idx}`);
   });
 };
 </script>
@@ -98,11 +118,16 @@ const downloadCrops = () => {
       <ul>
         <li
           v-for="(crop, idx) in imageData.crops"
-          :key="crop.index"
-          @click.stop="$emit('cropClick', idx)"
+          :key="'crop.control-' + crop.index"
+          @click.stop="cropClck(idx)"
         >
           <ui-checkbox
+            v-if="mode === 'crop-switcher'"
             :isChecked="crop.visible"
+          />
+          <ui-checkbox
+            v-if="mode === 'downloader'"
+            :isChecked="cropsForDownload.includes(idx)"
             :square="mode === 'downloader'"
           />
           <div class="crop-img">
@@ -195,6 +220,7 @@ const downloadCrops = () => {
     color: var(--color-bright);
   }
   .crops-list {
+    position: relative;
     p {
       position: relative;
       padding-bottom: 28rem;

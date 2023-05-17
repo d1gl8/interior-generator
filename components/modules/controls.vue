@@ -54,14 +54,14 @@ defineExpose({
           <in-svg src="/img/icon/download/to-local.svg" />
           Download
         </li>
-        <li @click="$emit('mail')">
+        <!-- <li @click="$emit('mail')">
           <in-svg src="/img/icon/download/to-mail.svg" />
           Send by email
         </li>
         <li @click="$emit('messenger')">
           <in-svg src="/img/icon/download/to-messenger.svg" />
           Send to *messenger*
-        </li>
+        </li> -->
       </ul>
       <div class="drop-success" v-if="isCopyClipSuccess">
         <in-svg src="/img/icon/download/to-clipboard.svg" />

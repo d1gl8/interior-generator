@@ -3,35 +3,21 @@ import { computed } from "vue";
 
 defineEmits(["change"]);
 const props = defineProps({
-  checked: {
-    type: String,
-    default: "after",
+  state: {
+    type: Number,
+    default: 1,
   },
 });
-
-const isChecked = (name: String) => {
-  return props.checked === name ? true : false;
-};
 </script>
 
 <template>
   <div class="result-switcher">
-    <label for="before" class="before" @click="$emit('change', 'before')">
-      <input
-        type="radio"
-        name="before-after"
-        id="before"
-        :checked="isChecked('before')"
-      />
+    <label for="before" class="before" @click="$emit('change', 0)">
+      <input type="radio" name="before-after" id="before" :checked="!state" />
       <span class="text">Before</span>
     </label>
-    <label for="after" class="after" @click="$emit('change', 'after')">
-      <input
-        type="radio"
-        name="before-after"
-        id="after"
-        :checked="isChecked('after')"
-      />
+    <label for="after" class="after" @click="$emit('change', 1)">
+      <input type="radio" name="before-after" id="after" :checked="state" />
       <span class="text">After</span>
     </label>
   </div>

@@ -8,25 +8,30 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // @! think about
+  isCropSwitcher: {
+    type: Boolean,
+    default: false,
+  },
   isEraser: {
     type: Boolean,
     default: false,
   },
+  //
   brushSize: {
     type: Number,
     required: true,
   },
 });
 
-const emits = defineEmits(["newBrushSize", "maskedFile"]);
+const emits = defineEmits(["newBrushSize", "maskedFile", "changeImageState"]);
 
 const resultImage = ref(null);
 const canvasCrops = ref(null);
 const canvasCropsHide = ref(null);
 
-const current = ref("after");
 const currentImage = computed(() => {
-  return current.value === "after"
+  return props.imageData.state
     ? props.imageData.output.image
     : props.imageData.input;
 });
@@ -185,7 +190,10 @@ defineExpose({
 </script>
 
 <template>
-  <result-switcher :checked="current" @change="current = $event" />
+  <result-switcher
+    :state="props.imageData.state"
+    @change="emits('changeImageState', $event)"
+  />
 
   <div
     v-if="currentImage"
@@ -202,16 +210,17 @@ defineExpose({
       loading="eager"
     />
     <canvas
+      v-show="props.imageData.state && isCropSwitcher"
       ref="canvasCropsHide"
       class="canvas-hide"
-      :width="props.imageData.output.size[0]"
-      :height="props.imageData.output.size[1]"
+      :width="props.imageData.output.size.width"
+      :height="props.imageData.output.size.height"
     />
     <canvas
       ref="canvasCrops"
       class="canvas-crops"
-      :width="props.imageData.output.size[0]"
-      :height="props.imageData.output.size[1]"
+      :width="props.imageData.output.size.width"
+      :height="props.imageData.output.size.height"
     />
     <canvas
       v-show="isEraser"
@@ -226,6 +235,13 @@ defineExpose({
       @mouseup="mUp"
       @touchend="mUp"
     />
+    <!-- <div class="crops-hide-canvas-control">
+      <p>show cleared places</p>
+      <ui-checkbox
+        :isChecked="isCropsHideShow"
+        @click="isCropsHideShow = !isCropsHideShow"
+      />
+    </div> -->
     <span
       v-show="isEraser"
       ref="brushCursor"
@@ -269,6 +285,11 @@ defineExpose({
       cursor: none;
       z-index: 3;
     }
+  }
+  .crops-hide-canvas-control {
+    @include text-body;
+    width: 100%;
+    display: flex;
   }
   .brush-cursor {
     pointer-events: none;
