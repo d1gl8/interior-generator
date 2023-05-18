@@ -54,13 +54,13 @@ const textData = computed(() => {
 });
 
 const cropClck = (idx: number) => {
-  emits("cropClick", idx);
   if (props.mode === "downloader") {
     const i = cropsForDownload.value.findIndex((i) => i === idx);
     i < 0
       ? cropsForDownload.value.push(idx)
       : cropsForDownload.value.splice(i, 1);
   }
+  if (props.mode === "crop-switcher") emits("cropClick", idx);
 };
 
 const asyncImgToURL = (
@@ -80,7 +80,9 @@ const asyncImgToURL = (
     img.src = src;
     img.onload = () => {
       ctx?.drawImage(img, 0, 0);
-      res(canvas.toDataURL("image/png"));
+      let result = canvas.toDataURL("image/png");
+      canvas.remove();
+      res(result);
     };
   });
 };
