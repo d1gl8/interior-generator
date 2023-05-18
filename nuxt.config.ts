@@ -37,5 +37,14 @@ export default defineNuxtConfig({
       },
     },
   },
-  modules: [["@nuxtjs/i18n", i18n], "@sidebase/nuxt-session"],
+  modules: [
+    ["@nuxtjs/i18n", i18n],
+    "@sidebase/nuxt-session",
+    [
+      "nuxt-gtag",
+      {
+        loadingStrategy: "async",
+      },
+    ],
+  ],
 });
