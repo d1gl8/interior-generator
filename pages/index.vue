@@ -207,12 +207,10 @@ onMounted(async () => {
     .artixel-logo {
       display: none;
     }
-    .hide-canvas-control {
-      display: none;
-    }
     grid-template-areas:
       "result-selector"
       "result"
+      "hide-canvas-switcher"
       "controls"
       "footer";
   }
@@ -230,7 +228,7 @@ onMounted(async () => {
       z-index: 3;
     }
     .hide-canvas-control {
-      display: flex;
+      color: var(--color-bright);
     }
   }
 
@@ -268,12 +266,11 @@ onMounted(async () => {
     padding: 38rem 40rem 0;
 
     &.image {
-      display: grid;
-      grid-template-columns: 388rem 1fr;
-      grid-template-rows: 50rem 258rem 100rem;
+      grid-template-rows: 50rem 258rem 20rem 100rem;
       grid-template-areas:
         "header result-selector"
         "result controls"
+        "hide-canvas-switcher controls"
         "footer controls";
       column-gap: 40rem;
       row-gap: 40rem;
@@ -292,28 +289,8 @@ onMounted(async () => {
     }
   }
 
-  &.edit {
-    grid-template-rows: 50rem 258rem 20rem 100rem;
-    grid-template-areas:
-      "header result-selector"
-      "result controls"
-      "hide-canvas-switcher controls"
-      "footer controls";
-    .hide-canvas-control {
-      justify-content: end;
-    }
-  }
-
   @include tabAlb {
     &.image {
-      grid-template-columns: 644rem 1fr;
-      grid-template-rows: 50rem 429rem 24rem;
-      grid-template-areas:
-        "header result-selector"
-        "result controls"
-        "footer footer";
-    }
-    &.edit {
       grid-template-columns: 644rem 1fr;
       grid-template-rows: 50rem 429rem 20rem 24rem;
       grid-template-areas:

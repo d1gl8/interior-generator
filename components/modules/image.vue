@@ -211,7 +211,7 @@ defineExpose({
       loading="eager"
     />
     <canvas
-      v-show="props.imageData.state && isCropSwitcher && isCropsShow"
+      v-show="props.imageData.state && isCropsShow"
       ref="canvasCropsHide"
       class="canvas-hide"
       :width="props.imageData.output.size.width"
@@ -243,7 +243,7 @@ defineExpose({
       :style="`left: ${x}px; top: ${y}px;`"
     />
   </div>
-  <div v-if="isCropSwitcher" class="hide-canvas-control">
+  <div class="hide-canvas-control">
     <p>show cleared places</p>
     <ui-checkbox :isChecked="isCropsShow" @click="isCropsShow = !isCropsShow" />
   </div>
@@ -332,7 +332,10 @@ defineExpose({
 
   p {
     margin-right: 8rem;
-    color: var(--color-bright);
+  }
+
+  @include tablet {
+    justify-content: end;
   }
 }
 </style>
