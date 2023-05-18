@@ -25,8 +25,9 @@ const props = defineProps({
 
 <style lang="scss" scoped>
 .result-switcher {
+  grid-area: "result-selector";
   width: 190rem;
-  margin-bottom: 28rem;
+  margin: 0 auto 28rem;
   label {
     input {
       display: none;
@@ -59,7 +60,6 @@ const props = defineProps({
   }
 
   @include tablet {
-    grid-area: selector;
     width: 260rem;
     margin-bottom: 0;
   }

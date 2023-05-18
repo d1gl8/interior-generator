@@ -35,6 +35,7 @@ const currentImage = computed(() => {
     ? props.imageData.output.image
     : props.imageData.input;
 });
+const isCropsShow = ref(true);
 
 const saveImage = async (mode: String = "local") => {
   const tempCanvas = canvasCrops.value.cloneNode(true);
@@ -210,7 +211,7 @@ defineExpose({
       loading="eager"
     />
     <canvas
-      v-show="props.imageData.state && isCropSwitcher"
+      v-show="props.imageData.state && isCropSwitcher && isCropsShow"
       ref="canvasCropsHide"
       class="canvas-hide"
       :width="props.imageData.output.size.width"
@@ -235,13 +236,6 @@ defineExpose({
       @mouseup="mUp"
       @touchend="mUp"
     />
-    <!-- <div class="crops-hide-canvas-control">
-      <p>show cleared places</p>
-      <ui-checkbox
-        :isChecked="isCropsHideShow"
-        @click="isCropsHideShow = !isCropsHideShow"
-      />
-    </div> -->
     <span
       v-show="isEraser"
       ref="brushCursor"
@@ -249,10 +243,15 @@ defineExpose({
       :style="`left: ${x}px; top: ${y}px;`"
     />
   </div>
+  <div v-if="isCropSwitcher" class="hide-canvas-control">
+    <p>show cleared places</p>
+    <ui-checkbox :isChecked="isCropsShow" @click="isCropsShow = !isCropsShow" />
+  </div>
 </template>
 
 <style lang="scss">
 .artixel-result {
+  grid-area: result;
   position: relative;
   width: 374rem;
   height: 252rem;
@@ -286,11 +285,7 @@ defineExpose({
       z-index: 3;
     }
   }
-  .crops-hide-canvas-control {
-    @include text-body;
-    width: 100%;
-    display: flex;
-  }
+
   .brush-cursor {
     pointer-events: none;
     position: absolute;
@@ -306,7 +301,6 @@ defineExpose({
   }
 
   @include tablet {
-    grid-area: result;
     width: 388rem;
     height: 258rem;
     margin-bottom: unset;
@@ -325,6 +319,20 @@ defineExpose({
   @include desktop {
     width: 1540rem;
     height: 1027rem;
+  }
+}
+.hide-canvas-control {
+  @include text-body;
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  grid-area: "hide-canvas-switcher";
+  display: flex;
+  margin-bottom: 28rem;
+
+  p {
+    margin-right: 8rem;
+    color: var(--color-bright);
   }
 }
 </style>

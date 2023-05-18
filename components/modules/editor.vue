@@ -20,7 +20,6 @@ const props = defineProps({
 
 const emits = defineEmits(["cropClick"]);
 
-const isCropsHideShow = ref(true);
 const textData = computed(() => {
   if (props.mode === "crop-switcher") {
     return {
@@ -61,7 +60,6 @@ const cropClck = (idx: number) => {
     i < 0
       ? cropsForDownload.value.push(idx)
       : cropsForDownload.value.splice(i, 1);
-    console.log(cropsForDownload.value);
   }
 };
 
@@ -197,7 +195,7 @@ const downloadCrops = () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 322rem;
+    margin-bottom: 378rem;
     h1 {
       position: relative;
       width: 100%;

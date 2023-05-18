@@ -79,6 +79,7 @@ defineExpose({
 
 <style lang="scss" scoped>
 .artixel-controls {
+  grid-area: controls;
   width: 100%;
   margin-bottom: 60rem;
   .button {
@@ -129,7 +130,6 @@ defineExpose({
 
 @include tablet {
   .artixel-controls {
-    grid-area: controls;
     width: 260rem;
     margin-bottom: auto;
   }

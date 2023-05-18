@@ -82,6 +82,8 @@ const uploadImg = async (e: Event) => {
 
 <style lang="scss">
 .artixel-upload {
+  grid-area: "upload";
+  margin: 0 auto;
   .spinner {
     @include spinner;
   }
@@ -92,7 +94,6 @@ const uploadImg = async (e: Event) => {
     place-items: center;
     border: 4rem dashed var(--color-placeholder);
     border-radius: 10rem;
-    margin-bottom: 40rem;
   }
 }
 </style>

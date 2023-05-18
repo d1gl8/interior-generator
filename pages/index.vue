@@ -193,9 +193,13 @@ onMounted(async () => {
 .artixel-photo-cleaner {
   width: 100%;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "header"
+    "upload"
+    "footer";
   padding: 28rem 20rem 34rem;
 
   &.image,
@@ -203,13 +207,30 @@ onMounted(async () => {
     .artixel-logo {
       display: none;
     }
+    .hide-canvas-control {
+      display: none;
+    }
+    grid-template-areas:
+      "result-selector"
+      "result"
+      "controls"
+      "footer";
   }
 
   &.edit {
     overflow: hidden;
+    grid-template-areas:
+      "result-selector"
+      "result"
+      "hide-canvas-switcher"
+      "controls"
+      "footer";
     .artixel-result {
       position: relative;
       z-index: 3;
+    }
+    .hide-canvas-control {
+      display: flex;
     }
   }
 
@@ -242,6 +263,8 @@ onMounted(async () => {
 
   @include tablet {
     height: unset;
+    grid-template-rows: 50rem 1fr 100rem;
+    place-items: center;
     padding: 38rem 40rem 0;
 
     &.image {
@@ -249,14 +272,13 @@ onMounted(async () => {
       grid-template-columns: 388rem 1fr;
       grid-template-rows: 50rem 258rem 100rem;
       grid-template-areas:
-        "header selector"
+        "header result-selector"
         "result controls"
         "footer controls";
       column-gap: 40rem;
       row-gap: 40rem;
 
       .artixel-logo {
-        grid-area: "header";
         display: flex;
         margin-bottom: 0;
         h1 {
@@ -265,9 +287,20 @@ onMounted(async () => {
       }
 
       .artixel-contacts {
-        grid-area: footer;
         margin-bottom: auto;
       }
+    }
+  }
+
+  &.edit {
+    grid-template-rows: 50rem 258rem 20rem 100rem;
+    grid-template-areas:
+      "header result-selector"
+      "result controls"
+      "hide-canvas-switcher controls"
+      "footer controls";
+    .hide-canvas-control {
+      justify-content: end;
     }
   }
 
@@ -276,9 +309,18 @@ onMounted(async () => {
       grid-template-columns: 644rem 1fr;
       grid-template-rows: 50rem 429rem 24rem;
       grid-template-areas:
-        "header selector"
+        "header result-selector"
         "result controls"
         "footer footer";
+    }
+    &.edit {
+      grid-template-columns: 644rem 1fr;
+      grid-template-rows: 50rem 429rem 20rem 24rem;
+      grid-template-areas:
+        "header result-selector"
+        "result controls"
+        "hide-canvas-switcher controls"
+        "footer controls";
     }
   }
 

@@ -17,6 +17,7 @@
 
 <style lang="scss" scoped>
 .artixel-contacts {
+  grid-area: footer;
   width: 100%;
   display: flex;
   justify-content: space-between;

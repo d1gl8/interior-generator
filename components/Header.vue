@@ -9,6 +9,7 @@
 
 <style lang="scss">
 .artixel-logo {
+  grid-area: "header";
   text-align: center;
   margin-top: 162rem;
   svg {
