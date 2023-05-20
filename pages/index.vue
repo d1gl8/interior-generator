@@ -1,324 +1,406 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, provide, nextTick } from "vue";
-import useCrops from "@/use/crops";
-import useFiles from "@/use/files";
-const config = useRuntimeConfig();
-const { sendFile } = useFiles();
-
-let imageData = ref({});
-const initClearImageData = () => {
-  imageData.value = {
-    state: 0,
-    isGetted: false,
-    input: null,
-    output: {
-      image: null,
-      size: null,
+const TEXT = {
+  title: "A new way of interior creation",
+  subtitle:
+    "AI-based tools you need for interior design, decoration and furnishing",
+  whom: [
+    {
+      title: "For end customers",
+      text: "An effortless way to design your desired interior and order all necessary materials and furniture.",
     },
-    crops: null,
-  };
+    {
+      title: "For manufactures and sellers",
+      text: "An interactive selling channel that connects you with potential customers and boosts your sales.",
+    },
+    {
+      title: "For designers",
+      text: "Multiple design projects with real SKUs, making it easier to discuss designs with your clients.",
+    },
+  ],
+  solutions: {
+    title: "Our solutions",
+    items: [
+      {
+        title: "Interior cleaner",
+        text: `AI automatically detects and removes all the furniture.\n\n After that you can get back any erased objects you need to stay in the room and erase manually any objects ai couldn’t erase.`,
+        img: "/img/promo/solution-cleaner.png",
+      },
+      {
+        title: "Surface decorator",
+        text: `AI detects the walls, floor and ceiling. After that you can choose new decorations for each type of surface from vast selection, compare several design projects, get calculations of material amount needed, buy it in our online-store (in progress) or just get the picture.`,
+        img: "/img/promo/solution-decorator.png",
+      },
+      {
+        title: "Furniture sets advisor",
+        text: `App will ask for your style preferences and limitations so that you could pick the best fitting sets of furniture, customize, place it on photo, buy it or share.`,
+        img: "/img/promo/solution-furniture.png",
+      },
+    ],
+  },
+  tryLink: "Try interior cleaner",
+  footer: {
+    copyright: "© Artixel 2023",
+    mail: "contact@artixel.io",
+  },
 };
-initClearImageData();
-
-const { cropShowSwitcher, showAllCrops, hideAllCrops } = useCrops(
-  computed(() => imageData.value.crops)
-);
-
-const currentSection = computed(() => {
-  if (!imageData.value.isGetted) return "upload";
-  if (editor.value.isOpen) return "image edit";
-  else return "image";
-});
-
-const moduleImage = ref(null);
-const moduleControls = ref(null);
-
-const editor = ref({
-  isOpen: false,
-  mode: "crop-switcher",
-});
-
-const imageResultLoaded = async (data: any) => {
-  if (!data.isGetted) return;
-
-  imageData.value = data;
-
-  await nextTick();
-  hideAllCrops();
-};
-
-const editorOpen = (mode: string = editor.value.mode) => {
-  if (document.documentElement.clientWidth < 768) {
-    const body = document.body;
-    body.style.position = "fixed";
-    body.style.top = 0;
-  }
-  imageData.value.state = 1;
-
-  editor.value = {
-    isOpen: true,
-    mode,
-  };
-  if (mode === "eraser") moduleImage.value.initBrush(); // !@ think about
-  if (mode === "downloader") hideAllCrops();
-};
-const editorClose = () => {
-  if (document.documentElement.clientWidth < 768) {
-    const body = document.body;
-    body.style.position = "";
-    body.style.top = "";
-  }
-
-  editor.value = {
-    isOpen: false,
-    mode: "crop-switcher",
-  };
-};
-
-const brushSize = ref(0);
-const brushSizeChange = (size: string) => {
-  document.body.style.setProperty("--brush-size", `${size}rem`); // @! think about
-  brushSize.value = +size;
-};
-
-const isCopyClipSuccess = ref(false);
-const toClipCopy = () => {
-  moduleImage.value.saveImage("clip");
-  isCopyClipSuccess.value = true;
-  setTimeout(() => {
-    isCopyClipSuccess.value = false;
-    moduleControls.value.dropHide();
-  }, 1000);
-};
-
-const newUpload = () => {
-  initClearImageData();
-  const fileInput = document.querySelector(".artixel-upload input[type=file]");
-  fileInput.click();
-};
-
-const isOpenModal = ref(false);
-const report = ref("");
-const sendReport = async () => {
-  let reportBugFile = new Blob([report.value], { type: "txt" });
-  const reportSendData = new FormData();
-  reportSendData.append(
-    "report",
-    reportBugFile,
-    `report-bug-${Date.now()}.txt`
-  );
-  await sendFile(reportSendData, "report/bug");
-  report.value = "";
-  isOpenModal.value = false;
-};
-
-onMounted(async () => {
-  brushSizeChange(
-    getComputedStyle(document.body)
-      .getPropertyValue("--brush-size")
-      .replace("rem", "")
-  );
-});
 </script>
 
 <template>
-  <div :class="['artixel-photo-cleaner', currentSection]">
-    <Header />
-    <ModuleUpload
-      ref="upload"
-      v-show="!imageData.isGetted"
-      :data="imageData"
-      @loaded="imageResultLoaded"
-    />
-    <template v-if="imageData.isGetted">
-      <ModuleImage
-        ref="moduleImage"
-        :imageData="imageData"
-        :isEraser="editor.mode === 'eraser'"
-        :isCropSwitcher="editor.mode === 'crop-switcher'"
-        :brushSize="brushSize"
-        @changeImageState="imageData.state = $event"
-        @maskedFile="imageData.output.image = $event"
-      />
-      <LazyModuleControls
-        ref="moduleControls"
-        :isCopyClipSuccess="isCopyClipSuccess"
-        @edit="editorOpen"
-        @eraser="editorOpen('eraser')"
-        @clip="toClipCopy"
-        @local="moduleImage.saveImage()"
-        @downloader="editorOpen('downloader')"
-        @upload="newUpload"
-      />
-    </template>
-    <LazyModuleEditor
-      v-if="imageData.isGetted && editor.isOpen"
-      :imageData="imageData"
-      :mode="editor.mode"
-      :brushSize="brushSize"
-      @close="editorClose"
-      @cropClick="cropShowSwitcher"
-      @showAll="showAllCrops"
-      @hideAll="hideAllCrops"
-      @brushSizeChange="brushSizeChange(+$event.target.value)"
-      @sendMask="moduleImage.sendMask"
-    />
-    <Footer @clickProblems="isOpenModal = true" />
-    <Modal class="report" :open="isOpenModal" @modalClose="isOpenModal = false">
-      <h2>Problems?</h2>
-      <form @submit.prevent>
-        <textarea
-          class="report-text"
-          v-model="report"
-          placeholder="Tell us what's going wrong"
-        />
-        <ui-button
-          text="Send"
-          icon="/img/icon/mail.svg"
-          blue
-          :disabled="!report.length"
-          @click="sendReport"
-        />
-      </form>
-      <in-svg
-        class="close"
-        src="/img/icon/close.svg"
-        @click="isOpenModal = false"
-      />
-    </Modal>
+  <div class="artixel-promo">
+    <header class="promo-header">
+      <in-svg class="logo" src="/img/logo.svg" />
+      <div class="artixel-mail">
+        <in-svg src="/img/icon/mail.svg" />
+        <p>{{ TEXT.footer.mail }}</p>
+      </div>
+    </header>
+    <h1 class="promo-title">{{ TEXT.title }}</h1>
+    <p class="promo-subtitle">{{ TEXT.subtitle }}</p>
+    <div class="promo-img">
+      <img src="/img/promo/img-before.png" alt="img-before" />
+      <img src="/img/promo/img-after.png" alt="img-after" />
+      <in-svg class="divider h" src="/img/promo/divider-horizontal.svg" />
+      <in-svg class="divider v" src="/img/promo/divider-vertical.svg" />
+      <in-svg class="wand" src="/img/promo/wand.svg" />
+    </div>
+    <ul class="artixel-whom">
+      <li v-for="(itemFor, i) in TEXT.whom" :key="`whom-${i}`">
+        <h3>{{ itemFor.title }}</h3>
+        <p>{{ itemFor.text }}</p>
+      </li>
+    </ul>
+    <main class="artixel-solutions">
+      <h2>{{ TEXT.solutions.title }}</h2>
+      <ul>
+        <li
+          v-for="(solution, i) in TEXT.solutions.items"
+          :key="`solutions-${i}`"
+        >
+          <h3>{{ solution.title }}</h3>
+          <p>{{ solution.text }}</p>
+          <img :src="solution.img" :alt="solution.title" />
+        </li>
+      </ul>
+    </main>
+    <nuxt-link class="try-cleaner" to="/cleaner"
+      >Try interior cleaner</nuxt-link
+    >
+    <footer class="promo-footer">
+      <p class="copyright">{{ TEXT.footer.copyright }}</p>
+      <div class="artixel-mail">
+        <in-svg src="/img/icon/mail.svg" />
+        <p>{{ TEXT.footer.mail }}</p>
+      </div>
+    </footer>
   </div>
 </template>
 
 <style lang="scss">
-.artixel-photo-cleaner {
-  width: 100%;
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas:
-    "header"
-    "upload"
-    "footer";
-  padding: 28rem 20rem 34rem;
+.artixel-promo {
+  --color-landing-background-2: #f6f6f4;
+  --promo-main-padding-x: 20rem;
 
-  &.image,
-  &.edit {
-    min-height: unset;
-    .artixel-logo {
+  position: relative;
+  max-width: 1200rem;
+  margin: 40rem var(--promo-main-padding-x) 0;
+
+  .promo-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 60rem;
+    .logo {
+      width: 208rem;
+      height: 42rem;
+      padding-right: 20rem;
+    }
+    .artixel-mail {
       display: none;
     }
-    grid-template-areas:
-      "result-selector"
-      "result"
-      "hide-canvas-switcher"
-      "controls"
-      "footer";
   }
 
-  &.edit {
+  .promo-title,
+  .promo-subtitle {
+    text-align: center;
+  }
+
+  .promo-title {
+    font-size: 40rem;
+    line-height: 52rem;
+    margin-bottom: 28rem;
+  }
+
+  .promo-subtitle {
+    @include text-body;
+    margin-bottom: 70rem;
+  }
+
+  .promo-img {
+    position: relative;
     overflow: hidden;
-    grid-template-areas:
-      "result-selector"
-      "result"
-      "hide-canvas-switcher"
-      "controls"
-      "footer";
-    .artixel-result {
-      position: relative;
-      z-index: 3;
-    }
-    .hide-canvas-control {
-      color: var(--color-bright);
-    }
-  }
-
-  .report {
-    .window {
-      position: relative;
-      h2 {
-        font-size: 26rem;
-        line-height: 32rem;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 30rem;
-      }
-      .report-text {
-        @include text-body;
-        resize: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10rem;
+    margin-bottom: 60rem;
+    .divider {
+      position: absolute;
+      &.h {
         width: 100%;
-        height: 200rem;
-        border: 2rem solid var(--color-input);
-        border-radius: 6rem;
-        padding: 13rem 20rem;
-        margin-bottom: 28rem;
+        top: 50%;
+        transform: translateY(-50%);
       }
-      .close {
-        top: 20rem;
-        right: 20rem;
+      &.v {
+        display: none;
+      }
+    }
+    .wand {
+      position: absolute;
+      width: 60rem;
+      height: 60rem;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .artixel-whom {
+    list-style-type: none;
+    padding: 0 20rem;
+    margin-bottom: 60rem;
+    li {
+      &:not(:last-of-type) {
+        margin-bottom: 40rem;
+      }
+      h3 {
+        @include text-body;
+        font-weight: bold;
+        margin-bottom: 12rem;
+      }
+      p {
+        @include reg-17;
       }
     }
   }
 
-  @include tablet {
-    height: unset;
-    grid-template-rows: 50rem 1fr 100rem;
-    place-items: center;
-    padding: 38rem 40rem 0;
-
-    &.image {
-      grid-template-rows: 50rem 258rem 20rem 100rem;
-      grid-template-areas:
-        "header result-selector"
-        "result controls"
-        "hide-canvas-switcher controls"
-        "footer controls";
-      column-gap: 40rem;
-      row-gap: 40rem;
-
-      .artixel-logo {
-        display: flex;
-        margin-bottom: 0;
-        h1 {
-          display: none;
+  .artixel-solutions {
+    padding: 60rem 26rem;
+    background-color: var(--color-landing-background-2);
+    margin: 0 calc(var(--promo-main-padding-x) * -1);
+    h2 {
+      @extend .promo-title;
+      text-align: left;
+      margin-bottom: 60rem;
+    }
+    ul {
+      list-style-type: none;
+      li {
+        &:not(:last-of-type) {
+          padding-bottom: 50rem;
+          border-bottom: 1rem solid rgba($color: #1a1a1a, $alpha: 0.1);
+          margin-bottom: 54rem;
+        }
+        h3 {
+          font-size: 24rem;
+          margin-bottom: 40rem;
+        }
+        p {
+          @include text-body;
+          margin-bottom: 28rem;
         }
       }
-
-      .artixel-contacts {
-        margin-bottom: auto;
-      }
     }
   }
 
-  @include tabAlb {
-    &.image {
-      grid-template-columns: 644rem 1fr;
-      grid-template-rows: 50rem 429rem 20rem 24rem;
-      grid-template-areas:
-        "header result-selector"
-        "result controls"
-        "hide-canvas-switcher controls"
-        "footer controls";
+  .try-cleaner {
+    @include text-body;
+    position: relative;
+    display: block;
+    width: max-content;
+    text-decoration: none;
+    font-weight: 700;
+    color: var(--color-bright);
+    background: linear-gradient(267.64deg, #54a812 0%, #4a8a18 100%);
+    box-shadow: 0 2rem 0rem #3f800c;
+    border-radius: 8rem;
+    padding: 14rem 28rem 17rem;
+    margin: 120rem auto;
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: -1;
+      width: calc(100vw - 40rem);
+      height: 174rem;
+      transform: translate(-50%, -50%);
+      border-radius: 20rem;
+    }
+    &::before {
+      background: linear-gradient(270.57deg, #fff59d 0%, #ffbff5 100%);
+    }
+    &::after {
+      opacity: 0.6;
+      background-image: url("/img/promo/pattern.svg");
+    }
+  }
+
+  .promo-footer {
+    @include reg-17;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color-bright);
+    background-color: var(--color-icon);
+    padding: 9rem 20rem 13rem;
+    margin: 0 calc(var(--promo-main-padding-x) * -1);
+  }
+
+  .artixel-mail {
+    display: flex;
+    align-items: center;
+    svg {
+      width: 16rem;
+      margin-right: 8rem;
+    }
+    p {
+      @include reg-17;
     }
   }
 
   @include laptop {
-    &.image {
-      grid-template-columns: 900rem 1fr;
-      grid-template-rows: 50rem 600rem 24rem;
-      padding-bottom: 48rem;
-      .artixel-logo {
-        h1 {
+    --promo-main-padding-x: 40rem;
+
+    .promo-header {
+      align-items: center;
+      justify-content: space-between;
+      .artixel-mail {
+        display: flex;
+        color: var(--color-placeholder);
+      }
+    }
+
+    .promo-title {
+      font-size: 48rem;
+      line-height: 54rem;
+      margin-bottom: 32rem;
+    }
+
+    .promo-subtitle {
+      margin-bottom: 77rem;
+    }
+
+    .promo-img {
+      flex-direction: unset;
+      margin-bottom: 72rem;
+      img {
+        width: 50%;
+      }
+      .divider {
+        &.h {
+          display: none;
+        }
+        &.v {
           display: block;
+          height: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+      }
+      .wand {
+        width: 90rem;
+        height: 90rem;
+      }
+    }
+
+    .artixel-whom,
+    .artixel-solutions ul {
+      display: flex;
+      column-gap: 57rem;
+      li {
+        width: calc(100% / 3);
+        &:not(:last-of-type) {
+          border-bottom: unset;
+          padding-bottom: unset;
+          margin-bottom: unset;
+        }
+      }
+    }
+
+    .artixel-solutions {
+      padding: 60rem 40rem;
+      h2 {
+        margin-bottom: 64rem;
+      }
+      h3 {
+        margin-bottom: 40rem;
+      }
+      ul {
+        li {
+          height: inherit;
+          display: flex;
+          flex-direction: column;
+          img {
+            margin-top: auto;
+          }
         }
       }
     }
   }
 
+  @media (min-width: 1340px) {
+    max-width: 1320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 40rem auto 0;
+
+    .promo-header {
+      width: 100%;
+    }
+
+    .promo-img,
+    .artixel-whom {
+      max-width: 1200px;
+    }
+
+    .artixel-whom {
+      padding: 0;
+    }
+
+    .artixel-solutions {
+      border-radius: 20rem;
+      margin: 0;
+    }
+
+    .try-cleaner {
+      &::before,
+      &::after {
+        max-width: 1320px;
+      }
+    }
+
+    .promo-footer {
+      width: 100vw;
+      padding: 0 calc(calc(100vw - 1320px) / 2);
+    }
+  }
+
   @include desktop {
-    &.image {
-      grid-template-columns: 1540rem 1fr;
-      grid-template-rows: 50rem 1027rem 24rem;
+    max-width: 1320rem;
+    .promo-img,
+    .artixel-whom {
+      max-width: 1200rem;
+    }
+
+    .try-cleaner {
+      &::before,
+      &::after {
+        max-width: 1320rem;
+      }
+    }
+    .promo-footer {
+      width: 100vw;
+      padding: 0 calc(calc(100vw - 1320rem) / 2);
     }
   }
 }
