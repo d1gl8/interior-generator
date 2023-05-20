@@ -204,6 +204,7 @@ onMounted(async () => {
 
   &.image,
   &.edit {
+    min-height: unset;
     .artixel-logo {
       display: none;
     }
@@ -238,7 +239,7 @@ onMounted(async () => {
       h2 {
         font-size: 26rem;
         line-height: 32rem;
-        font-weight: 600;
+        font-weight: 700;
         text-align: center;
         margin-bottom: 30rem;
       }
