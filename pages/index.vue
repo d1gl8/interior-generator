@@ -23,17 +23,17 @@ const TEXT = {
       {
         title: "Interior cleaner",
         text: `AI automatically detects and removes all the furniture.\n\n After that you can get back any erased objects you need to stay in the room and erase manually any objects ai couldn’t erase.`,
-        img: "/img/promo/solution-cleaner.png",
+        img: "/img/promo/solution-cleaner.webp",
       },
       {
         title: "Surface decorator",
         text: `AI detects the walls, floor and ceiling. After that you can choose new decorations for each type of surface from vast selection, compare several design projects, get calculations of material amount needed, buy it in our online-store (in progress) or just get the picture.`,
-        img: "/img/promo/solution-decorator.png",
+        img: "/img/promo/solution-decorator.webp",
       },
       {
         title: "Furniture sets advisor",
         text: `App will ask for your style preferences and limitations so that you could pick the best fitting sets of furniture, customize, place it on photo, buy it or share.`,
-        img: "/img/promo/solution-furniture.png",
+        img: "/img/promo/solution-furniture.webp",
       },
     ],
   },
@@ -57,8 +57,8 @@ const TEXT = {
     <h1 class="promo-title">{{ TEXT.title }}</h1>
     <p class="promo-subtitle">{{ TEXT.subtitle }}</p>
     <div class="promo-img">
-      <img src="/img/promo/img-before.png" alt="img-before" />
-      <img src="/img/promo/img-after.png" alt="img-after" />
+      <img src="/img/promo/img-before.webp" alt="img-before" />
+      <img src="/img/promo/img-after.webp" alt="img-after" />
       <in-svg class="divider h" src="/img/promo/divider-horizontal.svg" />
       <in-svg class="divider v" src="/img/promo/divider-vertical.svg" />
       <in-svg class="wand" src="/img/promo/wand.svg" />
@@ -78,7 +78,7 @@ const TEXT = {
         >
           <h3>{{ solution.title }}</h3>
           <p>{{ solution.text }}</p>
-          <img :src="solution.img" :alt="solution.title" />
+          <img loading="lazy" :src="solution.img" :alt="solution.title" />
         </li>
       </ul>
     </main>
