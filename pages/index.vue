@@ -57,8 +57,8 @@ const TEXT = {
     <h1 class="promo-title">{{ TEXT.title }}</h1>
     <h2 class="promo-subtitle">{{ TEXT.subtitle }}</h2>
     <div class="promo-img">
-      <img loading="lazy" src="/img/promo/img-before.webp" alt="img-before" />
-      <img loading="lazy" src="/img/promo/img-after.webp" alt="img-after" />
+      <img loading="eager" src="/img/promo/img-before.webp" alt="img-before" />
+      <img loading="eager" src="/img/promo/img-after.webp" alt="img-after" />
       <in-svg class="divider h" src="/img/promo/divider-horizontal.svg" />
       <in-svg class="divider v" src="/img/promo/divider-vertical.svg" />
       <in-svg class="wand" src="/img/promo/wand.svg" />
@@ -136,10 +136,12 @@ const TEXT = {
   }
 
   .promo-img {
+    min-height: 438rem;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background-color: var(--color-landing-background);
     border-radius: 10rem;
     margin-bottom: 60rem;
     .divider {
@@ -291,6 +293,7 @@ const TEXT = {
     }
 
     .promo-img {
+      min-height: 350rem;
       flex-direction: unset;
       margin-bottom: 72rem;
       img {
