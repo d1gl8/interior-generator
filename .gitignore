@@ -9,3 +9,4 @@ dist
 .DS_Store
 localhost.crt   
 localhost.key
+package-lock.json
