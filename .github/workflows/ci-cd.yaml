@@ -25,4 +25,4 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no $SSH_USER@35.187.44.146 'sudo systemctl stop foclean-front && cd /home/deb_admin/foclean-front && git reset hard --hard && git pull origin main --force && npm i && rm -rf .output && rm -rf .nuxt && npm run build && sudo systemctl start foclean-front'
+          ssh -o StrictHostKeyChecking=no $SSH_USER@35.187.44.146 'sudo systemctl stop foclean-front && cd /home/deb_admin/foclean-front && git reset --hard && git pull origin main --force && npm i && rm -rf .output && rm -rf .nuxt && npm run build && sudo systemctl start foclean-front'
