@@ -89,11 +89,10 @@ export default function useCrops(crops) {
     cropErase(crop, ctxCrops, ctxHide);
 
     if (crop.intersections.top.length) {
-      console.log(crop.label);
       crop.intersections.top.forEach(async (cropId) => {
         const cropTop = crops.value[cropId];
         cropTop.visible && (await cropDraw(cropTop, ctxCrops, ctxHide));
-        // !cropTop.visible && cropErase(cropTop, ctxCrops, ctxHide);
+        !cropTop.visible && cropErase(cropTop, ctxCrops, ctxHide);
       });
     }
   };
