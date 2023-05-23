@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   SSH_USER: ${{ secrets.SSH_USER }}
@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
-        ssh-known-hosts: ${{ secrets.KNOWN_HOSTS }}
-      env:
-        SSH_USER: ${{ secrets.SSH_USER }}
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.KNOWN_HOSTS }}
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
 
-    - name: Deploy
-      run: |
-        ssh -o StrictHostKeyChecking=no $SSH_USER@35.187.44.146 'sudo systemctl stop foclean-front && cd /home/deb_admin/foclean-front && git pull origin main --force && npm i && sudo rm -rf .output && sudo rm -rf .nuxt && npm run build && sudo systemctl start foclean-front'
+      - name: Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@35.187.44.146 'sudo systemctl stop foclean-front && cd /home/deb_admin/foclean-front && su - deployuser && echo "k49bm4ZJSaI1" && git pull origin main --force && exit && npm i && sudo rm -rf .output && sudo rm -rf .nuxt && npm run build && sudo systemctl start foclean-front'
