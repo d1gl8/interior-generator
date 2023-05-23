@@ -43,6 +43,10 @@ const TEXT = {
     mail: "contact@artixel.io",
   },
 };
+
+useHead({
+  title: "Artixel.io - New way of interior creation",
+});
 </script>
 
 <template>

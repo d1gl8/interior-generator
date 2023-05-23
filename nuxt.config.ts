@@ -2,6 +2,14 @@ const isDev = process.env.NODE_ENV !== "production";
 
 import { i18n } from "./locales/config";
 export default defineNuxtConfig({
+  app: {
+    head: {
+      charset: "utf-8",
+      htmlAttrs: {
+        lang: "en",
+      },
+    },
+  },
   runtimeConfig: {
     public: {
       isDev,

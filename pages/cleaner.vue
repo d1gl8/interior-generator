@@ -5,6 +5,10 @@ import useFiles from "@/use/files";
 const config = useRuntimeConfig();
 const { sendFile } = useFiles();
 
+useHead({
+  title: "Artixel.io - Clear your interior photo of unwanted furniture",
+});
+
 let imageData = ref({});
 const initClearImageData = () => {
   imageData.value = {
