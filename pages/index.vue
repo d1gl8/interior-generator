@@ -55,10 +55,10 @@ const TEXT = {
       </div>
     </header>
     <h1 class="promo-title">{{ TEXT.title }}</h1>
-    <p class="promo-subtitle">{{ TEXT.subtitle }}</p>
+    <h2 class="promo-subtitle">{{ TEXT.subtitle }}</h2>
     <div class="promo-img">
-      <img src="/img/promo/img-before.webp" alt="img-before" />
-      <img src="/img/promo/img-after.webp" alt="img-after" />
+      <img loading="lazy" src="/img/promo/img-before.webp" alt="img-before" />
+      <img loading="lazy" src="/img/promo/img-after.webp" alt="img-after" />
       <in-svg class="divider h" src="/img/promo/divider-horizontal.svg" />
       <in-svg class="divider v" src="/img/promo/divider-vertical.svg" />
       <in-svg class="wand" src="/img/promo/wand.svg" />
@@ -97,7 +97,7 @@ const TEXT = {
 
 <style lang="scss">
 .artixel-promo {
-  --color-landing-background-2: #f6f6f4;
+  --color-landing-background: #f6f6f4;
   --promo-main-padding-x: 20rem;
 
   position: relative;
@@ -131,6 +131,7 @@ const TEXT = {
 
   .promo-subtitle {
     @include text-body;
+    font-weight: normal;
     margin-bottom: 70rem;
   }
 
@@ -183,7 +184,7 @@ const TEXT = {
 
   .artixel-solutions {
     padding: 60rem 26rem;
-    background-color: var(--color-landing-background-2);
+    background-color: var(--color-landing-background);
     margin: 0 calc(var(--promo-main-padding-x) * -1);
     h2 {
       @extend .promo-title;
