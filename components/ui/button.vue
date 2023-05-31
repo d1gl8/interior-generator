@@ -22,7 +22,7 @@ const props = defineProps({
   </button>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .button {
   @include text-body;
   @include shadow;

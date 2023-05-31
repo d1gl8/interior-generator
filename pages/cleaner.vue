@@ -2,31 +2,26 @@
 import { ref, computed, onMounted, provide, nextTick } from "vue";
 import useCrops from "@/use/crops";
 import useFiles from "@/use/files";
+import useImageData from "@/use/imageData";
 const config = useRuntimeConfig();
+const { imageData, initClearImageData } = useImageData();
+const { cropShowSwitcher, showAllCrops, hideAllCrops } = useCrops(
+  computed(() => imageData.value.crops)
+);
 const { sendFile } = useFiles();
+
+initClearImageData();
 
 useHead({
   title: "Artixel.io - Clear your interior photo of unwanted furniture",
 });
 
-let imageData = ref({});
-const initClearImageData = () => {
-  imageData.value = {
-    state: 0,
-    isGetted: false,
-    input: null,
-    output: {
-      image: null,
-      size: null,
-    },
-    crops: null,
-  };
-};
-initClearImageData();
+const error = useError();
+if (error.value) {
+  console.log(error);
 
-const { cropShowSwitcher, showAllCrops, hideAllCrops } = useCrops(
-  computed(() => imageData.value.crops)
-);
+  error.value.message = "Oops! Page not found 😔";
+}
 
 const currentSection = computed(() => {
   if (!imageData.value.isGetted) return "upload";

@@ -1,7 +1,9 @@
 import { UseFetchOptions } from "nuxt/dist/app/composables";
+import useImageData from "@/use/imageData";
 
 export default function useFiles() {
   const config = useRuntimeConfig();
+  const { initClearImageData } = useImageData();
 
   const useApiFetch = (url: string, options: UseFetchOptions<object> = {}) => {
     options.baseURL = `${config.apiBaseUrl}/api`;
@@ -10,6 +12,12 @@ export default function useFiles() {
       async onResponse({ request, response, options }) {},
       async onResponseError({ request, response, options }) {
         console.log("[fetch response error]");
+        console.log(response);
+
+        showError({
+          statusCode: response.status,
+          statusMessage: response.statusText,
+        });
       },
 
       async onRequest({ request, options }) {
@@ -34,13 +42,8 @@ export default function useFiles() {
       body: data,
     };
 
-    try {
-      const request = await useApiFetch(endpoint, options);
-
-      return request;
-    } catch (err) {
-      console.log(err);
-    }
+    const request = await useApiFetch(endpoint, options);
+    return request;
   };
 
   const readFile = (file: File, as = "text") => {
