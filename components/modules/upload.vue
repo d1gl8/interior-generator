@@ -6,15 +6,15 @@ const { readFile, sendFile } = useFiles();
 const config = useRuntimeConfig();
 const input = ref(null);
 
-const loading = ref(false);
+// const loading = ref(false);
 
 const props = defineProps({
-  data: {
+  imageData: {
     type: Object,
     required: true,
   },
 });
-const emits = defineEmits(["loaded"]);
+const emits = defineEmits(["loading", "loaded"]);
 
 const resetData = () => {
   emits("loaded", {
@@ -28,7 +28,7 @@ const resetData = () => {
 };
 
 const uploadImg = async (e: Event) => {
-  loading.value = true;
+  emits("loading", true);
   console.clear();
 
   let imageForRemover;
@@ -36,7 +36,7 @@ const uploadImg = async (e: Event) => {
     ? (imageForRemover = e.dataTransfer.files[0])
     : (imageForRemover = e.target?.files[0]);
   if (!imageForRemover) {
-    loading.value = false;
+    emits("loading", false);
     return;
   }
 
@@ -46,8 +46,10 @@ const uploadImg = async (e: Event) => {
   toSendFormData.append("file", imageForRemover);
 
   const requestFormData = await sendFile(toSendFormData, "cleaner/image");
-  const { crops, width, height } = requestFormData.data.value;
-  const image = requestFormData.data.value.output;
+  console.log(requestFormData);
+
+  const { crops, width, height } = requestFormData.value;
+  const image = requestFormData.value.output;
   const size = { width, height };
 
   emits("loaded", {
@@ -61,7 +63,7 @@ const uploadImg = async (e: Event) => {
     crops,
   });
 
-  loading.value = false;
+  emits("loading", false);
   e.target.value = null;
 };
 </script>
@@ -69,14 +71,18 @@ const uploadImg = async (e: Event) => {
 <template>
   <div class="artixel-upload">
     <ui-input-file
-      v-show="!loading"
+      v-show="!imageData.loading"
       ref="input"
       id="image-to-clean"
       text="Upload image"
       icon="/img/icon/upload.svg"
       @change="uploadImg"
     />
-    <lazy-in-svg v-if="loading" class="spinner" src="/img/icon/spinner.svg" />
+    <lazy-in-svg
+      v-if="imageData.loading"
+      class="spinner"
+      src="/img/icon/spinner.svg"
+    />
   </div>
 </template>
 

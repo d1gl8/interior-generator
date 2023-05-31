@@ -16,13 +16,6 @@ useHead({
   title: "Artixel.io - Clear your interior photo of unwanted furniture",
 });
 
-const error = useError();
-if (error.value) {
-  console.log(error);
-
-  error.value.message = "Oops! Page not found 😔";
-}
-
 const currentSection = computed(() => {
   if (!imageData.value.isGetted) return "upload";
   if (editor.value.isOpen) return "image edit";
@@ -37,6 +30,9 @@ const editor = ref({
   mode: "crop-switcher",
 });
 
+const imageLoading = (loadingState: boolean) => {
+  imageData.value.loading = loadingState;
+};
 const imageResultLoaded = async (data: any) => {
   if (!data.isGetted) return;
 
@@ -126,7 +122,8 @@ onMounted(async () => {
     <ModuleUpload
       ref="upload"
       v-show="!imageData.isGetted"
-      :data="imageData"
+      :imageData="imageData"
+      @loading="imageLoading"
       @loaded="imageResultLoaded"
     />
     <template v-if="imageData.isGetted">
@@ -163,7 +160,11 @@ onMounted(async () => {
       @sendMask="moduleImage.sendMask"
     />
     <Footer @clickProblems="isOpenModal = true" />
-    <Modal class="report" :open="isOpenModal" @modalClose="isOpenModal = false">
+    <LazyModal
+      class="report"
+      :open="isOpenModal"
+      @modalClose="isOpenModal = false"
+    >
       <h2>Problems?</h2>
       <form @submit.prevent>
         <textarea
@@ -184,7 +185,7 @@ onMounted(async () => {
         src="/img/icon/close.svg"
         @click="isOpenModal = false"
       />
-    </Modal>
+    </LazyModal>
   </div>
 </template>
 

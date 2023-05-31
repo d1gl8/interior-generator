@@ -36,14 +36,17 @@ export default function useFiles() {
     });
   };
 
-  const sendFile = async (data: FormData, endpoint: string) => {
+  const sendFile = async (sendData: FormData, endpoint: string) => {
     let options = {
       method: "POST",
-      body: data,
+      body: sendData,
     };
 
-    const request = await useApiFetch(endpoint, options);
-    return request;
+    const { data, error } = await useApiFetch(endpoint, options);
+    if (error.value) {
+      throw createError(error.value);
+    }
+    return data;
   };
 
   const readFile = (file: File, as = "text") => {

@@ -10,6 +10,7 @@ export default function useImageData() {
         size: null,
       },
       crops: null,
+      loading: false,
     };
   };
 

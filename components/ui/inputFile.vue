@@ -18,7 +18,7 @@ const props = defineProps({
   },
 });
 
-// !@ capture
+const emits = defineEmits(["change"]);
 </script>
 
 <template>
