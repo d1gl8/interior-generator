@@ -11,20 +11,18 @@ const closeErrorModal = () => {
 };
 
 onErrorCaptured((err) => {
-  console.log(err);
-
   isOpenModal.value = true;
   error.value = {
     statusCode: err.statusCode,
-    statusMessage: err.statusMessage,
+    statusMessage: err.statusMessage || err.stack,
   };
-  // return false;
+  return false;
 });
 </script>
 
 <template>
   <NuxtPage />
-  <Modal :open="isOpenModal">
+  <Modal :open="isOpenModal" class="error">
     <h1>{{ error.statusCode }}</h1>
     <p>{{ error.statusMessage }}</p>
     <ui-button text="Go back" blue @click="closeErrorModal" />
@@ -32,7 +30,7 @@ onErrorCaptured((err) => {
 </template>
 
 <style lang="scss">
-.modal {
+.error {
   .window {
     @include text-body;
     width: unset !important;

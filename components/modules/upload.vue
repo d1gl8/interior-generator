@@ -29,7 +29,6 @@ const resetData = () => {
 
 const uploadImg = async (e: Event) => {
   emits("loading", true);
-  console.clear();
 
   let imageForRemover;
   e.dataTransfer
@@ -46,7 +45,6 @@ const uploadImg = async (e: Event) => {
   toSendFormData.append("file", imageForRemover);
 
   const requestFormData = await sendFile(toSendFormData, "cleaner/image");
-  console.log(requestFormData);
 
   const { crops, width, height } = requestFormData.value;
   const image = requestFormData.value.output;

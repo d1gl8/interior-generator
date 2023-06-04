@@ -77,7 +77,7 @@ const sendMask = async () => {
   toSendFormData.append("mask_file", brushFile);
 
   const requestMaskedFile = await sendFile(toSendFormData, "cleaner/mask");
-  const maskedFile = requestMaskedFile.data;
+  const maskedFile = requestMaskedFile.value;
 
   emits("maskedFile", maskedFile);
   ctx.value.clearRect(0, 0, size.value.w, size.value.h);

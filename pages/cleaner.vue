@@ -87,9 +87,14 @@ const toClipCopy = () => {
 };
 
 const newUpload = () => {
-  initClearImageData();
-  const fileInput = document.querySelector(".artixel-upload input[type=file]");
-  fileInput.click();
+  const fileInput: HTMLInputElement = document.querySelector(
+    ".artixel-upload input[type=file]"
+  );
+  fileInput?.click();
+  fileInput.onchange = () => {
+    initClearImageData();
+    imageData.value.loading = true;
+  };
 };
 
 const isOpenModal = ref(false);

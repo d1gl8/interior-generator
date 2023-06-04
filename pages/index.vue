@@ -80,7 +80,14 @@ useHead({
           v-for="(solution, i) in TEXT.solutions.items"
           :key="`solutions-${i}`"
         >
-          <h3>{{ solution.title }}</h3>
+          <header>
+            <h3>{{ solution.title }}</h3>
+            <span
+              v-if="i !== TEXT.solutions.items.length - 1"
+              class="label-in-progress"
+              >In progress</span
+            >
+          </header>
           <p>{{ solution.text }}</p>
           <img loading="lazy" :src="solution.img" :alt="solution.title" />
         </li>
@@ -100,9 +107,30 @@ useHead({
 </template>
 
 <style lang="scss">
+:root {
+  @include laptop {
+    --rem: 1px;
+  }
+  @include desktop {
+    --rem: calc(100vw / 1920);
+  }
+}
 .artixel-promo {
-  --color-landing-background: #f6f6f4;
+  --color-main-button: linear-gradient(267.64deg, #54a812 0%, #4a8a18 100%);
+  --color-main-button-hover: linear-gradient(
+    267.64deg,
+    #509f11 0%,
+    #458016 100%
+  );
+  --color-main-button-shadow: #3f800c;
+
   --promo-main-padding-x: 20rem;
+  --color-landing-background: #f6f6f4;
+  --color-landing-gradient-1: linear-gradient(
+    86.64deg,
+    #d352ce 0%,
+    #ff9f2e 100%
+  );
 
   position: relative;
   max-width: 1200rem;
@@ -205,12 +233,24 @@ useHead({
           border-bottom: 1rem solid rgba($color: #1a1a1a, $alpha: 0.1);
           margin-bottom: 54rem;
         }
-        h3 {
-          font-size: 24rem;
+        header {
+          display: flex;
+          align-items: center;
           margin-bottom: 40rem;
+          h3 {
+            font-size: 24rem;
+            margin-right: 34rem;
+          }
+          span {
+            @include reg-17;
+            color: var(--color-bright);
+            background: var(--color-landing-gradient-1);
+            border-radius: 6rem;
+            padding: 3rem 10rem 6rem;
+          }
         }
         p {
-          @include text-body;
+          @include reg-17;
           margin-bottom: 28rem;
         }
       }
@@ -225,8 +265,8 @@ useHead({
     text-decoration: none;
     font-weight: 700;
     color: var(--color-bright);
-    background: linear-gradient(267.64deg, #54a812 0%, #4a8a18 100%);
-    box-shadow: 0 2rem 0rem #3f800c;
+    background: var(--color-main-button);
+    box-shadow: 0 2rem 0rem var(--color-main-button-shadow);
     border-radius: 8rem;
     padding: 14rem 28rem 17rem;
     margin: 120rem auto;
@@ -248,6 +288,12 @@ useHead({
     &::after {
       opacity: 0.6;
       background-image: url("/img/promo/pattern.svg");
+    }
+    &:hover {
+      background: var(--color-main-button-hover);
+    }
+    &:active {
+      box-shadow: inset 0 2rem 0rem var(--color-main-button-shadow);
     }
   }
 
@@ -339,7 +385,7 @@ useHead({
       h2 {
         margin-bottom: 64rem;
       }
-      h3 {
+      header {
         margin-bottom: 40rem;
       }
       ul {
@@ -356,11 +402,14 @@ useHead({
   }
 
   @media (min-width: 1340px) {
-    max-width: 1320px;
+    max-width: 1320rem;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 40rem auto 0;
+    justify-content: space-between;
+    padding-top: 40rem;
+    margin: 0 auto;
 
     .promo-header {
       width: 100%;
@@ -368,7 +417,7 @@ useHead({
 
     .promo-img,
     .artixel-whom {
-      max-width: 1200px;
+      max-width: 1200rem;
     }
 
     .artixel-whom {
@@ -383,33 +432,33 @@ useHead({
     .try-cleaner {
       &::before,
       &::after {
-        max-width: 1320px;
-      }
-    }
-
-    .promo-footer {
-      width: 100vw;
-      padding: 0 calc(calc(100vw - 1320px) / 2);
-    }
-  }
-
-  @include desktop {
-    max-width: 1320rem;
-    .promo-img,
-    .artixel-whom {
-      max-width: 1200rem;
-    }
-
-    .try-cleaner {
-      &::before,
-      &::after {
         max-width: 1320rem;
       }
     }
+
     .promo-footer {
       width: 100vw;
-      padding: 0 calc(calc(100vw - 1320rem) / 2);
+      padding: 9rem calc(calc(100vw - 1320rem) / 2) 13rem;
     }
   }
+
+  // @include desktop {
+  //   max-width: 1320rem;
+  //   .promo-img,
+  //   .artixel-whom {
+  //     max-width: 1200rem;
+  //   }
+
+  //   .try-cleaner {
+  //     &::before,
+  //     &::after {
+  //       max-width: 1320rem;
+  //     }
+  //   }
+  //   .promo-footer {
+  //     width: 100vw;
+  //     padding: 0 calc(calc(100vw - 1320rem) / 2);
+  //   }
+  // }
 }
 </style>

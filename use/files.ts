@@ -1,9 +1,7 @@
 import { UseFetchOptions } from "nuxt/dist/app/composables";
-import useImageData from "@/use/imageData";
 
 export default function useFiles() {
   const config = useRuntimeConfig();
-  const { initClearImageData } = useImageData();
 
   const useApiFetch = (url: string, options: UseFetchOptions<object> = {}) => {
     options.baseURL = `${config.apiBaseUrl}/api`;
@@ -12,21 +10,15 @@ export default function useFiles() {
       async onResponse({ request, response, options }) {},
       async onResponseError({ request, response, options }) {
         console.log("[fetch response error]");
-        console.log(response);
-
-        showError({
-          statusCode: response.status,
-          statusMessage: response.statusText,
-        });
       },
 
       async onRequest({ request, options }) {
-        const sessionObject = await useSession();
-
         const headers = new Headers(options.headers);
-        headers.set("session", sessionObject.session.value.id);
         headers.set("request-start", Date.now().toString());
-
+        if (process.client) {
+          const sessionObject = await useSession();
+          headers.set("session", sessionObject.session.value.id);
+        }
         options.headers = headers;
       },
 

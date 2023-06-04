@@ -1,8 +1,8 @@
-const isDev = process.env.NODE_ENV !== "production";
-
 import { i18n } from "./locales/config";
 export default defineNuxtConfig({
+  ssr: false,
   app: {
+    rootId: "artixel",
     head: {
       charset: "utf-8",
       htmlAttrs: {
@@ -12,7 +12,6 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      isDev,
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
     },
   },
@@ -50,7 +49,23 @@ export default defineNuxtConfig({
   },
   modules: [
     ["@nuxtjs/i18n", i18n],
-    "@sidebase/nuxt-session",
+    [
+      "@sidebase/nuxt-session",
+      {
+        isEnabled: true,
+        ipPinning: true,
+        rolling: true,
+        session: {
+          expiryInSeconds: 60 * 60,
+          idLength: 16,
+          cookieSecure: false,
+          cookieHttpOnly: false,
+        },
+        api: {
+          basePath: "/client/session",
+        },
+      },
+    ],
     [
       "nuxt-gtag",
       {
