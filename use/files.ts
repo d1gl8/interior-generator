@@ -29,7 +29,7 @@ export default function useFiles() {
   };
 
   const sendFile = async (sendData: FormData, endpoint: string) => {
-    let options = {
+    let options: UseFetchOptions<object> = {
       method: "POST",
       body: sendData,
     };
@@ -56,6 +56,30 @@ export default function useFiles() {
     });
   };
 
+  const asyncImgToURL = (
+    src: string,
+    width: number,
+    height: number,
+    mime: string = "image/png"
+  ): Promise<string> => {
+    return new Promise(function (res, rej) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      const img = new Image(width, height);
+      img.crossOrigin = "anonymous";
+      img.src = src;
+      img.onload = () => {
+        ctx?.drawImage(img, 0, 0);
+        let result = canvas.toDataURL("image/png");
+        canvas.remove();
+        res(result);
+      };
+    });
+  };
+
   const saveFileFromURL = (fileURL: string, name: string = "file-name") => {
     let downloadLink = document.createElement("a");
     document.body.appendChild(downloadLink);
@@ -72,5 +96,5 @@ export default function useFiles() {
     return new File([blob], name, { type: type });
   };
 
-  return { sendFile, readFile, saveFileFromURL, getFileFromUrl };
+  return { sendFile, readFile, asyncImgToURL, saveFileFromURL, getFileFromUrl };
 }

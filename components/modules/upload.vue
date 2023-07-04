@@ -4,100 +4,71 @@ import useFiles from "@/use/files";
 const { readFile, sendFile } = useFiles();
 
 const config = useRuntimeConfig();
-const input = ref(null);
-
-// const loading = ref(false);
 
 const props = defineProps({
-  imageData: {
-    type: Object,
-    required: true,
+  isLoading: {
+    type: Boolean,
+    default: false,
   },
 });
 const emits = defineEmits(["loading", "loaded"]);
 
-const resetData = () => {
-  emits("loaded", {
-    input: null,
-    output: {
-      image: null,
-      size: null,
-    },
-    crops: null,
-  });
-};
-
-const uploadImg = async (e: Event) => {
+const uploadImg = async (e: DragEvent) => {
+  console.log("uploadImg start");
   emits("loading", true);
 
-  let imageForRemover;
+  let inputFile;
   e.dataTransfer
-    ? (imageForRemover = e.dataTransfer.files[0])
-    : (imageForRemover = e.target?.files[0]);
-  if (!imageForRemover) {
+    ? (inputFile = e.dataTransfer.files[0])
+    : (inputFile = e.target?.files[0]);
+  if (!inputFile) {
     emits("loading", false);
     return;
   }
 
-  const input = await readFile(imageForRemover, "url");
-
   const toSendFormData = new FormData();
-  toSendFormData.append("file", imageForRemover);
+  toSendFormData.append("file", inputFile);
 
   const requestFormData = await sendFile(toSendFormData, "cleaner/image");
+  const input = await readFile(inputFile, "url");
 
-  const { crops, width, height } = requestFormData.value;
-  const image = requestFormData.value.output;
-  const size = { width, height };
+  const { crops, output, width, height } =
+    requestFormData.value as cleanerImage;
+
+  crops.forEach((crop: crop) => {
+    crop.visible = true;
+  });
 
   emits("loaded", {
-    state: 1,
-    isGetted: true,
     input,
-    output: {
-      image,
-      size,
-    },
+    output,
+    width,
+    height,
     crops,
   });
 
   emits("loading", false);
   e.target.value = null;
+  console.log("uploadImg end");
 };
 </script>
 
 <template>
-  <div class="artixel-upload">
-    <ui-input-file
-      v-show="!imageData.loading"
-      ref="input"
-      id="image-to-clean"
-      text="Upload image"
-      icon="/img/icon/upload.svg"
-      @change="uploadImg"
-    />
-    <lazy-in-svg
-      v-if="imageData.loading"
-      class="spinner"
-      src="/img/icon/spinner.svg"
-    />
-  </div>
+  <ui-input-file
+    v-show="!isLoading"
+    ref="input"
+    id="image-to-clean"
+    text="Upload image"
+    icon="/img/icon/upload.svg"
+    @change="uploadImg"
+  />
+  <lazy-in-svg v-if="isLoading" class="spinner" src="/img/icon/spinner.svg" />
 </template>
 
 <style lang="scss">
-.artixel-upload {
-  grid-area: "upload";
-  margin: 0 auto;
+.upload {
   .spinner {
     @include spinner;
-  }
-  @include tablet {
-    width: 100%;
-    height: 400rem;
-    display: grid;
-    place-items: center;
-    border: 4rem dashed var(--color-placeholder);
-    border-radius: 10rem;
   }
 }
 </style>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, getCurrentInstance } from "vue";
-import useImageData from "@/use/imageData";
-const { initClearImageData } = useImageData();
 const isOpenModal = ref(false);
 const error = ref({ statusCode: null, statusMessage: null });
 
@@ -32,6 +30,7 @@ onErrorCaptured((err) => {
 <style lang="scss">
 .error {
   .window {
+    max-width: 100vw;
     @include text-body;
     width: unset !important;
     height: unset !important;

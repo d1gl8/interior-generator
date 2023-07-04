@@ -1,18 +1,20 @@
-export default function useCrops(crops) {
+export default function useCrops(crops: Ref<crop[]>) {
   const getCanvasContexts = () => {
-    const ctxCrops = document
-      .querySelector(".artixel-result .canvas-crops")
+    const ctxCrops: CanvasRenderingContext2D = document
+      .querySelector(".cleaner-result .canvas-crops")
       ?.getContext("2d");
-    const ctxHide = document
-      .querySelector(".artixel-result .canvas-hide")
+    const ctxHide: CanvasRenderingContext2D = document
+      .querySelector(".cleaner-result .canvas-hide")
       ?.getContext("2d");
+
+    ctxHide.lineWidth = 2;
+    ctxHide.strokeStyle = "#50C200";
+    ctxHide.fillStyle = "#378A3F";
 
     return { ctxCrops, ctxHide };
   };
 
-  const getCropPath = (crop) => {
-    // let cropsPaths: Array<Path2D> = [];
-
+  const getCropPath = (crop: crop) => {
     const cropRegion = new Path2D();
     crop.contour.forEach((point: Array<number>) => {
       cropRegion?.lineTo(crop.box.x + point[0], crop.box.y + point[1]);
@@ -22,18 +24,15 @@ export default function useCrops(crops) {
     return cropRegion;
   };
 
-  const cropDraw = (
-    crop,
-    ctxCrops: CanvasRenderingContext2D,
-    ctxHide: CanvasRenderingContext2D
-  ) => {
+  const cropDraw = (crop: crop) => {
+    const { ctxCrops, ctxHide } = getCanvasContexts();
     return new Promise<void>((res, rej) => {
       const img = new Image(crop.box.width, crop.box.height);
       img.crossOrigin = "Anonymous";
       img.src = crop.rgba;
 
-      ctxCrops.globalCompositeOperation = "source-over";
       ctxHide.globalCompositeOperation = "destination-out";
+      ctxCrops.globalCompositeOperation = "source-over";
 
       img.onload = () => {
         ctxCrops.drawImage(img, crop.box.x, crop.box.y);
@@ -43,20 +42,18 @@ export default function useCrops(crops) {
       };
     });
   };
-
-  const cropErase = (
-    crop,
-    ctxCrops: CanvasRenderingContext2D,
-    ctxHide: CanvasRenderingContext2D
-  ) => {
+  const cropErase = (crop: crop) => {
+    const { ctxCrops, ctxHide } = getCanvasContexts();
     ctxHide.globalCompositeOperation = "source-over";
     ctxCrops.globalCompositeOperation = "destination-out";
 
     let cropAlpha = 0.8;
-    crop.intersections.top.length &&
-      crop.intersections.top.forEach((el: number) => {
+    if (crop.intersections.bottom.length) {
+      crop.intersections.bottom.forEach((el: number) => {
         cropAlpha = +(cropAlpha -= 0.1).toFixed(1);
       });
+    }
+
     ctxHide.globalAlpha = cropAlpha;
 
     ctxCrops.fill(getCropPath(crop));
@@ -66,56 +63,54 @@ export default function useCrops(crops) {
 
   const cropShow = async (idx: number) => {
     const crop = crops.value[idx];
-    const { ctxCrops, ctxHide } = getCanvasContexts();
 
-    await cropDraw(crop, ctxCrops, ctxHide);
+    if (crop.visible) return;
+    await cropDraw(crop);
 
     if (crop.intersections.top.length) {
-      crop.intersections.top.forEach(async (cropId) => {
+      crop.intersections.top.forEach(async (cropId: number) => {
         const cropTop = crops.value[cropId];
-        cropTop.visible && (await cropDraw(cropTop, ctxCrops, ctxHide));
-        !cropTop.visible && cropErase(cropTop, ctxCrops, ctxHide);
+        cropTop.visible && (await cropDraw(cropTop));
+        !cropTop.visible && cropErase(cropTop);
       });
     }
   };
-
   const cropHide = (idx: number) => {
     const crop = crops.value[idx];
-    const { ctxCrops, ctxHide } = getCanvasContexts();
-    ctxHide.lineWidth = 2;
-    ctxHide.strokeStyle = "#50C200";
-    ctxHide.fillStyle = "#378A3F";
 
-    cropErase(crop, ctxCrops, ctxHide);
+    if (!crop.visible) return;
+    cropErase(crop);
 
     if (crop.intersections.top.length) {
-      crop.intersections.top.forEach(async (cropId) => {
+      crop.intersections.top.forEach(async (cropId: number) => {
         const cropTop = crops.value[cropId];
-        cropTop.visible && (await cropDraw(cropTop, ctxCrops, ctxHide));
-        !cropTop.visible && cropErase(cropTop, ctxCrops, ctxHide);
+        cropTop.visible && (await cropDraw(cropTop));
+        !cropTop.visible && cropErase(cropTop);
       });
     }
   };
 
   const cropShowSwitcher = (idx: number) => {
     const crop = crops.value[idx];
-    crop.visible = !crop.visible;
-    if (crop.visible) {
+    if (!crop.visible) {
       cropShow(idx);
     } else {
       cropHide(idx);
     }
+    crop.visible = !crop.visible;
   };
   const showAllCrops = () => {
-    crops.value.forEach((crop: Object, idx: number) => {
-      crop.visible = true;
+    crops.value.forEach((crop: crop, idx: number) => {
       cropShow(idx);
+      crop.visible = true;
     });
   };
   const hideAllCrops = () => {
-    crops.value.forEach((crop: Object, idx: number) => {
-      crop.visible = false;
+    console.log("hideAllCrops");
+
+    crops.value.forEach((crop: crop, idx: number) => {
       cropHide(idx);
+      crop.visible = false;
     });
   };
 

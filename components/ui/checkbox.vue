@@ -57,15 +57,16 @@ const props = defineProps({
     width: 24rem;
     height: 24rem;
     background-color: var(--color-bright);
+    border: 2rem #d8dadb solid;
     border-radius: 2rem;
     &.checked {
       &::after {
         content: "";
         position: absolute;
-        left: 6rem;
-        top: 6rem;
-        width: 12rem;
-        height: 12rem;
+        left: 5rem;
+        top: 5rem;
+        width: 10rem;
+        height: 10rem;
         background-color: var(--color-toggle-on);
         border-radius: 1rem;
       }

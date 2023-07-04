@@ -45,8 +45,9 @@ watch(
   .window {
     z-index: 92;
     position: relative;
-    width: 438rem;
-    height: 408rem;
+    max-width: 100vw;
+    // width: 438rem;
+    // height: 408rem;
     background-color: var(--color-bright);
     border-radius: 20rem;
     padding: 28rem 40rem 40rem;
@@ -54,6 +55,10 @@ watch(
     & > *:not(svg) {
       position: relative;
       z-index: 93;
+    }
+
+    p {
+      width: 100%;
     }
   }
   &.show {

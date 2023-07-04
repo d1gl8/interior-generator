@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { PropType, computed } from "vue";
 import useFiles from "@/use/files";
-const { saveFileFromURL } = useFiles();
+const { asyncImgToURL, saveFileFromURL } = useFiles();
 
 const props = defineProps({
-  imageData: {
-    type: Object,
+  crops: {
+    type: Array as PropType<crop[]>,
     required: true,
   },
   mode: {
     type: String,
     default: "crop-switcher",
+  },
+  greenBoundsShow: {
+    type: Boolean,
+    required: true,
   },
   brushSize: {
     type: Number,
@@ -18,7 +22,15 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(["cropClick"]);
+const emits = defineEmits([
+  "close",
+  "greenBoundsShowSwitch",
+  "showAll",
+  "hideAll",
+  "brushSizeChange",
+  "sendMask",
+  "cropClick",
+]);
 
 const textData = computed(() => {
   if (props.mode === "crop-switcher") {
@@ -63,34 +75,10 @@ const cropClck = (idx: number) => {
   if (props.mode === "crop-switcher") emits("cropClick", idx);
 };
 
-const asyncImgToURL = (
-  src: string,
-  width: number,
-  height: number,
-  mime: string = "image/png"
-) => {
-  return new Promise(function (res, rej) {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d");
-    const img = new Image(width, height);
-    img.crossOrigin = "anonymous";
-    img.src = src;
-    img.onload = () => {
-      ctx?.drawImage(img, 0, 0);
-      let result = canvas.toDataURL("image/png");
-      canvas.remove();
-      res(result);
-    };
-  });
-};
-
 const cropsForDownload = ref([]);
 const downloadCrops = () => {
   cropsForDownload.value.forEach(async (idx: number) => {
-    const crop = props.imageData.crops[idx];
+    const crop: crop = props.crops[idx];
     const cropFile = await asyncImgToURL(
       crop.rgba,
       crop.box.width,
@@ -102,316 +90,283 @@ const downloadCrops = () => {
 </script>
 
 <template>
-  <div class="editor">
-    <header class="editor-header">
-      <h1>
-        {{ textData.headerTitle }}
-        <in-svg
-          class="close"
-          src="/img/icon/close.svg"
-          @click="$emit('close')"
+  <h1 class="editor-title">
+    {{ textData.headerTitle }}
+    <in-svg class="close" src="/img/icon/close.svg" @click="$emit('close')" />
+  </h1>
+  <p class="editor-subtitle">{{ textData.listTitle }}</p>
+
+  <div v-if="mode !== 'eraser'" class="hide-canvas-control">
+    <ui-checkbox
+      :isChecked="greenBoundsShow"
+      @click="$emit('greenBoundsShowSwitch')"
+    />
+    <p>Show green bounds</p>
+  </div>
+  <div class="crops-list">
+    <ul v-if="mode !== 'eraser'">
+      <li
+        v-for="(crop, idx) in crops"
+        :key="'crop.control-' + crop.index"
+        @click.stop="cropClck(idx)"
+      >
+        <ui-checkbox
+          v-if="mode === 'crop-switcher'"
+          :isChecked="crop.visible"
         />
-      </h1>
-    </header>
-    <div class="crops-list" v-if="mode !== 'eraser'">
-      <p>{{ textData.listTitle }}</p>
-      <ul>
-        <li
-          v-for="(crop, idx) in imageData.crops"
-          :key="'crop.control-' + crop.index"
-          @click.stop="cropClck(idx)"
-        >
-          <ui-checkbox
-            v-if="mode === 'crop-switcher'"
-            :isChecked="crop.visible"
-          />
-          <ui-checkbox
-            v-if="mode === 'downloader'"
-            :isChecked="cropsForDownload.includes(idx)"
-            :square="mode === 'downloader'"
-          />
-          <div class="crop-img">
-            <img :src="crop.rgb" :alt="crop.label" loading="lazy" />
-          </div>
-          <span>
-            {{ crop.label }}
-          </span>
-        </li>
-      </ul>
-      <footer>
+        <ui-checkbox
+          v-if="mode === 'downloader'"
+          :isChecked="cropsForDownload.includes(idx)"
+          :square="mode === 'downloader'"
+        />
+        <div class="crop-img">
+          <img :src="crop.rgb" :alt="crop.label" loading="lazy" />
+        </div>
+        <span>
+          {{ crop.label }}
+        </span>
+      </li>
+    </ul>
+    <footer>
+      <template v-if="mode === 'crop-switcher'">
         <button class="enable" @click="$emit('showAll')">
           {{ textData.footer.left }}
         </button>
         <button class="disable" @click="$emit('hideAll')">
           {{ textData.footer.right }}
         </button>
-        <ui-button
-          v-if="mode === 'downloader'"
-          :text="textData.footer.button"
-          icon="/img/icon/download.svg"
-          blue
-          @click="downloadCrops"
-        />
-      </footer>
-    </div>
-    <div class="eraser-controls" v-if="mode === 'eraser'">
-      <p>Paint over objects to erase</p>
-      <label class="range" for="brush-range">
-        <span class="range-header">
-          <span>Brush</span>
-          <span>{{ brushSize }}</span>
-        </span>
-        <input
-          id="brush-range"
-          type="range"
-          min="10"
-          max="50"
-          :value="brushSize"
-          step="1"
-          @input="$emit('brushSizeChange', $event)"
-        />
-      </label>
+        <ui-button class="apply" text="Apply" green />
+      </template>
       <ui-button
-        text="Erase"
-        icon="/img/icon/erase.svg"
-        @click="$emit('sendMask')"
+        v-if="mode === 'downloader'"
+        :text="textData.footer.button"
+        icon="/img/icon/download.svg"
+        green
+        @click="downloadCrops"
       />
-    </div>
+      <template v-if="mode === 'eraser'">
+        <ui-button class="apply" text="Apply" green />
+      </template>
+    </footer>
+  </div>
+  <div class="eraser-controls" v-if="mode === 'eraser'">
+    <label class="range" for="brush-range">
+      <span class="range-header">
+        <span>Brush</span>
+        <span>{{ brushSize }}</span>
+      </span>
+      <input
+        id="brush-range"
+        type="range"
+        min="10"
+        max="50"
+        :value="brushSize"
+        step="1"
+        @input="$emit('brushSizeChange', $event)"
+      />
+    </label>
+    <ui-button
+      text="Erase"
+      icon="/img/icon/erase.svg"
+      @click="$emit('sendMask')"
+    />
   </div>
 </template>
 
 <style lang="scss">
-.editor {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 2;
-  width: 100vw;
-  height: 100vh;
+.editor-title {
+  position: relative;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  background: var(--color-overlay);
-  backdrop-filter: blur(15rem);
-  padding: 28rem 20rem 0;
-  &-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 378rem;
-    h1 {
-      position: relative;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--color-header);
-      font-size: 23rem;
-      line-height: 23rem;
-      .close {
-        right: 0;
-        color: var(--color-bright);
-      }
-    }
+  align-items: center;
+  color: var(--color-text);
+  font-size: 26rem;
+  font-weight: 700;
+  margin-top: 25rem;
+  position: relative;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: -20rem;
+    width: 100vw;
+  }
+  &::before {
+    height: 53rem;
+    top: -53rem;
+    background-color: #3d3d3d;
+    opacity: 0.2;
+  }
+  &::after {
+    background-color: white;
+    height: 25rem;
+    top: -25rem;
+    border-top-left-radius: 28rem;
+    border-top-right-radius: 28rem;
+  }
+
+  .close {
+    right: 0;
+    color: var(--color-icon);
+  }
+}
+p {
+  @include reg-17;
+  width: 100%;
+  text-align: center;
+  color: var(--color-placeholder);
+}
+
+.hide-canvas-control {
+  @include text-body;
+  display: flex;
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  padding-bottom: 28rem;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1rem;
+    background-color: var(--color-text);
+    opacity: 0.2;
   }
   p {
-    @include text-body;
-    width: 100%;
-    text-align: center;
-    color: var(--color-bright);
+    text-align: unset;
+    margin-left: 12rem;
   }
-  .crops-list {
-    position: relative;
-    p {
-      position: relative;
-      padding-bottom: 28rem;
-      margin-bottom: 28rem;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 1rem;
-        background-color: var(--color-icon);
-      }
-    }
-    ul {
-      max-height: 430rem;
-      overflow-y: scroll;
-      li {
-        @include text-body;
-        display: flex;
-        align-items: center;
-        color: var(--color-bright);
-        cursor: pointer;
-        &:not(:last-of-type) {
-          margin-bottom: 28rem;
-        }
+}
 
-        button {
-          width: 31rem;
-          height: 21rem;
-          background-color: transparent;
-          svg {
-            width: 100%;
-            height: 100%;
-          }
-        }
-        .crop-img {
-          width: 52rem;
-          height: 52rem;
-          margin: 0 16rem;
-          img {
-            height: 100%;
-            object-fit: cover;
-          }
-        }
-      }
-    }
-    footer {
-      width: 100%;
-      height: 89rem;
-      position: fixed;
-      left: 0;
-      bottom: 0;
+.crops-list {
+  position: relative;
+  ul {
+    max-height: calc(100vh - 540rem);
+    overflow-y: scroll;
+    padding-bottom: 83rem;
+    li {
+      @include reg-17;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 48rem;
-      background: var(--color-overlay);
-      backdrop-filter: blur(5rem);
-      padding: 0 40rem;
-      button:not(.button) {
-        @include text-body;
-        color: var(--color-bright);
-        background-color: transparent;
-        text-decoration: underline dotted;
-        cursor: pointer;
-        &:hover {
-          color: var(--color-bright-hover);
-        }
+      color: var(--color-text);
+      cursor: pointer;
+      &:not(:last-of-type) {
+        margin-bottom: 28rem;
       }
 
-      .button {
-        box-shadow: none;
+      button {
+        width: 31rem;
+        height: 21rem;
+        background-color: transparent;
+        svg {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .crop-img {
+        width: 52rem;
+        height: 52rem;
+        margin: 0 16rem;
+        border: 1rem solid var(--color-input);
+        border-radius: 2rem;
+        img {
+          height: 100%;
+          object-fit: cover;
+        }
       }
     }
   }
-
-  .eraser-controls {
+  footer {
+    width: 100%;
+    height: 81rem;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    z-index: 3;
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    column-gap: 60rem;
-    padding: 0 20rem;
-    p {
-      width: 100%;
-      margin-bottom: 40rem;
+    align-items: center;
+    column-gap: 34rem;
+    background: #f5f5f5;
+    padding: 0 28rem;
+    button:not(.button) {
+      @include text-body;
+      color: var(--color-text);
+      background-color: transparent;
+      cursor: pointer;
+      // &:hover {
+      //   color: var(--color-bright-hover);
+      // }
     }
-    .range {
-      width: 156rem;
-      &-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 14rem;
-        span {
-          @include text-body;
-          color: var(--color-bright);
-        }
-      }
-      input[type="range"] {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 5rem;
-        display: flex;
-        align-items: center;
-        background-color: var(--color-bright);
-        border-radius: 8rem;
-        margin: 8rem 0;
-        cursor: pointer;
-        &::-webkit-slider-runnable-track {
-          box-shadow: none;
-          border: none;
-          background: transparent;
-        }
-        &::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          display: block;
-          width: 18rem;
-          height: 18rem;
-          background: var(--color-toggle-off);
-          border: 2rem solid var(--color-bright);
-          border-radius: 50%;
-        }
-      }
-    }
-    .button {
-      width: unset;
+
+    .apply {
+      width: min-content;
+      margin-left: auto;
+      box-shadow: none;
     }
   }
+}
 
-  @include tablet {
-    justify-content: flex-start;
-    padding: 28rem 28rem 0;
+.eraser-controls {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 28rem;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 1rem;
+    background-color: var(--color-text);
+    opacity: 0.2;
+  }
+  p {
+    width: 100%;
+    margin-bottom: 40rem;
+  }
+  .range {
+    width: 100%;
     &-header {
-      margin-bottom: 60rem;
-      h1 {
-        svg {
-          width: 40rem;
-          height: 40rem;
-        }
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14rem;
+      span {
+        @include reg-17;
+        color: var(--color-text);
       }
     }
-    .crops-list,
-    .eraser-controls {
-      width: 272rem;
-      margin-top: 14rem;
-      margin-left: auto;
-      p {
-        display: inline-block;
-        text-align: left;
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5rem;
+      display: flex;
+      align-items: center;
+      background-color: #d8dadb;
+      border-radius: 8rem;
+      margin: 8rem 0;
+      cursor: pointer;
+      &::-webkit-slider-runnable-track {
+        box-shadow: none;
+        border: none;
+        background: transparent;
       }
-      footer {
-        position: relative;
-        justify-content: space-between;
-        background: unset;
-        backdrop-filter: unset;
-        padding: 40rem 0 20rem;
-        &::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          bottom: 0;
-          width: 100%;
-          height: 1rem;
-          background-color: var(--color-bright);
-          opacity: 0.1;
-        }
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        display: block;
+        width: 18rem;
+        height: 18rem;
+        background: var(--color-toggle-off);
+        border: 2rem solid var(--color-bright);
+        border-radius: 50%;
       }
     }
-    .eraser-controls {
-      padding: unset;
-      position: relative;
-      padding-bottom: 40rem;
-      margin-bottom: 40rem;
-      &::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 1rem;
-        background-color: var(--color-bright);
-        opacity: 0.1;
-      }
-      .range {
-        width: 100%;
-        margin-bottom: 30rem;
-      }
-      .button {
-        width: 100%;
-      }
-    }
+  }
+  .button {
+    margin-top: 40rem;
   }
 }
 </style>

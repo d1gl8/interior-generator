@@ -38,11 +38,13 @@ const emits = defineEmits(["change"]);
 
 <style lang="scss" scoped>
 .input-file {
+  width: 100%;
   input {
     display: none;
   }
   label {
-    display: inline-flex;
+    width: 100%;
+    display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20rem;
@@ -50,9 +52,9 @@ const emits = defineEmits(["change"]);
     line-height: 23rem;
     color: var(--color-bright);
     background: var(--color-main-button);
-    box-shadow: 0px 2px 0px #3479c6; // !@
+    box-shadow: 0px 2px 0px 0px #3f800c;
     border-radius: 10rem;
-    padding: 12rem 20rem 14rem;
+    padding: 13rem 20rem 13rem;
     cursor: pointer;
     svg {
       color: var(--color-bright);
@@ -65,7 +67,14 @@ const emits = defineEmits(["change"]);
       background: var(--color-main-button-hover);
     }
     &:active {
-      box-shadow: 0px -2px 0px #3479c6;
+      box-shadow: 0px -2px 0px #3f800c;
+    }
+  }
+
+  @include laptop {
+    label {
+      @include reg-17;
+      padding: 11rem 16rem;
     }
   }
 }

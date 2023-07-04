@@ -1,12 +1,35 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+const TEXT = {
+  objectsBack: "Place or remove objects",
+  eraseManual: "Erase more manually",
+  roomSurfaces: "Replace room surfaces",
+  download: {
+    mainButton: "Download / Share",
+    clipboard: "Copy to clipboard",
+    local: "Download",
+    clipboardSuccess: "Copied successfully!",
+  },
+  downloadObjects: "Download specific objects",
+  newImage: "Upload new image",
+};
+
 const props = defineProps({
   isCopyClipSuccess: {
     type: Boolean,
     default: false,
   },
 });
+
+defineEmits([
+  "edit",
+  "eraser",
+  "saveToClipboard",
+  "saveToLocal",
+  "downloader",
+  "upload",
+]);
 
 const drop = ref(null);
 const isDropShow = ref(false);
@@ -31,57 +54,57 @@ defineExpose({
 </script>
 
 <template>
-  <main class="artixel-controls">
-    <ui-button text="Get some objects back" @click="$emit('edit')" />
+  <div class="controls">
     <ui-button
-      text="Erase more manually"
+      :text="TEXT.objectsBack"
+      icon="/img/icon/objects-back.svg"
+      @click="$emit('edit')"
+    />
+    <ui-button
+      :text="TEXT.eraseManual"
       icon="/img/icon/erase.svg"
       @click="$emit('eraser')"
     />
+    <ui-button :text="TEXT.roomSurfaces" icon="/img/icon/room-surfaces.svg" />
     <div class="button-with-dropper" ref="drop">
       <ui-button
-        text="Download / Share"
+        :text="TEXT.download.mainButton"
         icon="/img/icon/download.svg"
-        blue
+        green-gradient
         @click="!isDropShow ? dropShow() : dropHide()"
       />
       <ul class="drop-list" v-show="!isCopyClipSuccess && isDropShow">
-        <li @click="$emit('clip')">
+        <li @click="$emit('saveToClipboard')">
           <in-svg src="/img/icon/download/to-clipboard.svg" />
-          Copy to clipboard
+          {{ TEXT.download.clipboard }}
         </li>
-        <li @click="$emit('local')">
+        <li @click="$emit('saveToLocal')">
           <in-svg src="/img/icon/download/to-local.svg" />
-          Download
+          {{ TEXT.download.local }}
         </li>
-        <!-- <li @click="$emit('mail')">
-          <in-svg src="/img/icon/download/to-mail.svg" />
-          Send by email
-        </li>
-        <li @click="$emit('messenger')">
-          <in-svg src="/img/icon/download/to-messenger.svg" />
-          Send to *messenger*
-        </li> -->
       </ul>
       <div class="drop-success" v-if="isCopyClipSuccess">
         <in-svg src="/img/icon/download/to-clipboard.svg" />
-        Copied successfully!
+        {{ TEXT.download.clipboardSuccess }}
       </div>
     </div>
-    <ui-button text="Download specific objects" @click="$emit('downloader')" />
     <ui-button
-      text="Upload new image"
+      :text="TEXT.downloadObjects"
+      icon="/img/icon/download-objects.svg"
+      @click="$emit('downloader')"
+    />
+    <ui-button
+      :text="TEXT.newImage"
       icon="/img/icon/upload.svg"
+      blue
       @click="$emit('upload')"
     />
-  </main>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.artixel-controls {
-  grid-area: controls;
+.controls {
   width: 100%;
-  margin-bottom: 60rem;
   .button {
     &:not(:last-of-type) {
       margin-bottom: 28rem;
@@ -128,10 +151,10 @@ defineExpose({
   }
 }
 
-@include tablet {
-  .artixel-controls {
-    width: 260rem;
-    margin-bottom: auto;
-  }
-}
+// @include tablet {
+//   .controls {
+//     width: 260rem;
+//     margin-bottom: auto;
+//   }
+// }
 </style>

@@ -3,21 +3,31 @@ import { computed } from "vue";
 
 defineEmits(["change"]);
 const props = defineProps({
-  state: {
-    type: Number,
-    default: 1,
+  resultShow: {
+    type: Boolean,
+    required: true,
   },
 });
 </script>
 
 <template>
   <div class="result-switcher">
-    <label for="before" class="before" @click="$emit('change', 0)">
-      <input type="radio" name="before-after" id="before" :checked="!state" />
+    <label for="before" class="before" @click="$emit('change', false)">
+      <input
+        type="radio"
+        name="before-after"
+        id="before"
+        :checked="!resultShow"
+      />
       <span class="text">Before</span>
     </label>
-    <label for="after" class="after" @click="$emit('change', 1)">
-      <input type="radio" name="before-after" id="after" :checked="state" />
+    <label for="after" class="after" @click="$emit('change', true)">
+      <input
+        type="radio"
+        name="before-after"
+        id="after"
+        :checked="resultShow"
+      />
       <span class="text">After</span>
     </label>
   </div>
@@ -25,9 +35,7 @@ const props = defineProps({
 
 <style lang="scss" scoped>
 .result-switcher {
-  grid-area: "result-selector";
   width: 190rem;
-  margin: 0 auto 28rem;
   label {
     input {
       display: none;
@@ -59,9 +67,12 @@ const props = defineProps({
     }
   }
 
-  @include tablet {
-    width: 260rem;
-    margin-bottom: 0;
+  @include laptop {
+    label {
+      .text {
+        @include reg-17;
+      }
+    }
   }
 }
 </style>
